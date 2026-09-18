@@ -39,11 +39,39 @@
   .tab-panel.active { display: block; animation: fadeUp .28s ease both; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
 
-  /* Aba que hospeda um dashboard embutido em iframe: ocupa a altura total disponível,
-     sem a animação de fade (evita "pulo" no redimensionamento do iframe) */
+  /* Abas que hospedam um app externo/dashboard embutido em iframe: ocupam a altura
+     total disponível, sem a animação de fade (evita "pulo" no redimensionamento) */
   .tab-panel.iframe-host { display: none; height: 100%; }
   .tab-panel.iframe-host.active { display: flex; flex-direction: column; animation: none; }
   .embedded-dashboard-frame { width: 100%; flex: 1; min-height: calc(100vh - 64px); border: 0; background: #0c0e15; }
+
+  /* Barra de utilidades acima do iframe de app externo (status + ações) */
+  .embed-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0;
+  }
+  .embed-toolbar .status-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #4ADE80;
+    box-shadow: 0 0 0 3px rgba(74,222,128,0.15); flex-shrink: 0;
+  }
+  .embed-toolbar .status-dot.loading { background: #C9A227; box-shadow: 0 0 0 3px rgba(201,162,39,0.15); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+  .embed-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    cursor: pointer; transition: background-color .15s ease, border-color .15s ease;
+    text-decoration: none;
+  }
+  .embed-btn:hover { background: #262E33; border-color: #33404a; }
+  .embed-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .embed-frame-wrap { position: relative; flex: 1; display: flex; }
+  .embed-frame-wrap iframe { flex: 1; }
+  .embed-frame-wrap:fullscreen iframe,
+  .embed-frame-wrap:-webkit-full-screen iframe { min-height: 100vh; }
+  .embed-frame-wrap:fullscreen,
+  .embed-frame-wrap:-webkit-full-screen { background: #0c0e15; padding: 0; }
 
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -106,7 +134,7 @@
     </div>
 
     <div class="px-6 py-5 border-t text-xs" style="border-color: var(--border); color: var(--text-muted);">
-      Estrutura inicial · v0.2
+      Estrutura inicial · v0.3
     </div>
   </aside>
 
@@ -224,29 +252,39 @@
         </div>
       </section>
 
-      <!-- ===== KRATOS ===== -->
-      <section class="tab-panel" id="tab-kratos">
-        <div class="grid grid-cols-4 gap-4">
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Obras em andamento</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">6</p>
+      <!-- ===== KRATOS (app React/Vite externo embutido via iframe) ===== -->
+      <section class="tab-panel iframe-host" id="tab-kratos">
+        <div class="embed-toolbar">
+          <div class="flex items-center gap-2.5">
+            <span class="status-dot loading" id="kratos-status-dot"></span>
+            <span class="text-xs" id="kratos-status-text" style="color: var(--text-muted);">Carregando Kratos Gestão de Obras…</span>
           </div>
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Orçamentos emitidos</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">11</p>
-          </div>
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Faturamento do mês</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">R$ 152.300</p>
-          </div>
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Prazo médio de entrega</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">46 dias</p>
+          <div class="flex items-center gap-2">
+            <button class="embed-btn" onclick="reloadKratosFrame()" title="Recarregar o app">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              Recarregar
+            </button>
+            <button class="embed-btn" onclick="toggleKratosFullscreen()" title="Abrir em tela cheia">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
+              Tela cheia
+            </button>
+            <a class="embed-btn" href="https://kratos-gestao-de-obras-pkzo.vercel.app/" target="_blank" rel="noopener noreferrer" title="Abrir em nova aba">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              Nova aba
+            </a>
           </div>
         </div>
-        <div class="panel rounded-lg p-6 mt-4">
-          <p class="text-sm font-semibold mb-2">Obras ativas</p>
-          <p class="text-xs" style="color: var(--text-muted);">Espaço reservado para a lista de obras, memoriais e cronogramas.</p>
+        <div class="embed-frame-wrap" id="kratos-frame-wrap">
+          <iframe
+            class="embedded-dashboard-frame"
+            id="frame-kratos"
+            src="https://kratos-gestao-de-obras-pkzo.vercel.app/"
+            title="Kratos Gestão de Obras"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allow="clipboard-read; clipboard-write; fullscreen"
+            onload="onKratosFrameLoad()">
+          </iframe>
         </div>
       </section>
 
@@ -286,9 +324,12 @@
     consolidado: ["Visão Consolidada", "Resumo das 4 empresas do grupo"],
     imobiliaria: ["Segue Imobiliária", "Dashboard anual de captações, locações e VGL"],
     airbnb:      ["Segue Airbnb", "Reservas, ocupação e desempenho das unidades"],
-    kratos:      ["Kratos Serviços e Reformas", "Obras, orçamentos e faturamento"],
+    kratos:      ["Kratos Serviços e Reformas", "Sistema de gestão de obras (aplicação integrada)"],
     viva:        ["Viva", "Painel em estruturação"],
   };
+
+  // Abas cujo conteúdo é um iframe de altura total (sem o padding padrão de 32px)
+  const IFRAME_TABS = ['imobiliaria', 'kratos'];
 
   function switchTab(id, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -300,9 +341,9 @@
     document.getElementById('page-title').textContent = titles[id][0];
     document.getElementById('page-subtitle').textContent = titles[id][1];
 
-    // A aba da Imobiliária hospeda um dashboard em iframe com Chart.js: canvases
-    // renderizados enquanto a aba estava oculta (display:none) ficam com tamanho
-    // 0x0. Ao reexibir a aba, avisamos o iframe para reajustar seus gráficos.
+    // A aba da Imobiliária hospeda um dashboard próprio (mesma origem) com Chart.js:
+    // canvases renderizados enquanto a aba estava oculta (display:none) ficam com
+    // tamanho 0x0. Ao reexibir a aba, avisamos o iframe para reajustar seus gráficos.
     if (id === 'imobiliaria') {
       const frame = document.getElementById('frame-imobiliaria');
       if (frame && frame.contentWindow) {
@@ -311,12 +352,42 @@
     }
 
     // Nas abas normais, a área de conteúdo mantém o padding padrão.
-    // Na aba com iframe, o próprio iframe ocupa toda a altura disponível.
+    // Nas abas com iframe (Imobiliária, Kratos), o próprio iframe ocupa toda a
+    // altura disponível do painel.
     const wrap = document.getElementById('content-scroll-wrap');
-    if (id === 'imobiliaria') {
-      wrap.style.padding = '0';
+    wrap.style.padding = IFRAME_TABS.includes(id) ? '0' : '';
+  }
+
+  // ----- Kratos: barra de status, recarregar e tela cheia -----
+  const KRATOS_URL = 'https://kratos-gestao-de-obras-pkzo.vercel.app/';
+
+  function onKratosFrameLoad() {
+    const dot = document.getElementById('kratos-status-dot');
+    const text = document.getElementById('kratos-status-text');
+    if (dot) dot.classList.remove('loading');
+    if (text) text.textContent = 'Kratos Gestão de Obras — conectado';
+  }
+
+  function reloadKratosFrame() {
+    const dot = document.getElementById('kratos-status-dot');
+    const text = document.getElementById('kratos-status-text');
+    if (dot) dot.classList.add('loading');
+    if (text) text.textContent = 'Recarregando Kratos Gestão de Obras…';
+    const frame = document.getElementById('frame-kratos');
+    if (frame) frame.src = KRATOS_URL;
+  }
+
+  function toggleKratosFullscreen() {
+    const wrap = document.getElementById('kratos-frame-wrap');
+    if (!wrap) return;
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    if (isFullscreen) {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     } else {
-      wrap.style.padding = '';
+      if (wrap.requestFullscreen) wrap.requestFullscreen();
+      else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+      else window.open(KRATOS_URL, '_blank', 'noopener,noreferrer');
     }
   }
 
