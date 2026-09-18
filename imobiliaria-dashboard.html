@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Anual — Segue Imobiliária</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0c0e15;color:#f1f5f9;font-family:'DM Sans',sans-serif;min-height:100vh}
+body{padding:28px 36px;display:flex;flex-direction:column;gap:18px}
+.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:0.5px solid rgba(255,255,255,0.07)}
+.h-title{font-size:32px;font-weight:700;letter-spacing:-0.5px}
+.h-sub{font-size:14px;color:#6b7280;margin-top:4px}
+.clock{font-family:'DM Mono',monospace;font-size:38px;font-weight:600;text-align:right}
+.datestr{font-size:13px;color:#6b7280;text-align:right;margin-top:3px}
+.badge{font-size:12px;padding:4px 12px;border-radius:6px;font-weight:600}
+.b-blue{background:rgba(79,142,247,0.15);color:#7eb3ff}
+.b-green{background:rgba(34,197,94,0.15);color:#4ade80}
+.b-amber{background:rgba(245,158,11,0.15);color:#fbbf24}
+.b-teal{background:rgba(20,184,166,0.15);color:#2dd4bf}
+.b-gray{background:rgba(107,114,128,0.2);color:#9ca3af}
+.b-purple{background:rgba(168,85,247,0.15);color:#c084fc}
+.b-red{background:rgba(239,68,68,0.15);color:#f87171}
+.section-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:8px;color:#6b7280;margin-bottom:12px}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.card{background:#13161f;border-radius:14px;padding:16px 18px;border:0.5px solid rgba(255,255,255,0.07)}
+.chip{background:#151827;border-radius:10px;padding:12px 16px;border:0.5px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;gap:3px;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.chip-lbl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#6b7280}
+.chip-val{font-size:28px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.1}
+.chip-sub{font-size:11px;color:#6b7280;margin-top:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+hr{border:none;border-top:0.5px solid rgba(255,255,255,0.07);margin:12px 0}
+.bar-row{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:0.5px solid rgba(255,255,255,0.045)}
+.bar-row:last-child{border-bottom:none}
+.bar-lbl{font-size:12px;color:#9ca3af;min-width:130px}
+.bar-track{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-num{font-size:13px;font-weight:700;color:#e2e8f0;min-width:24px;text-align:right;font-family:'DM Mono',monospace}
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:0.5px solid rgba(255,255,255,0.07)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#6b7280;padding:10px 12px;text-align:left;background:#0d1016;border-bottom:0.5px solid rgba(255,255,255,0.08);white-space:nowrap}
+td{padding:9px 12px;border-bottom:0.5px solid rgba(255,255,255,0.05);color:#d1d5db;vertical-align:middle}
+tr:nth-child(even) td{background:#0f1218}
+tr:last-child td{border-bottom:none}
+.tr-total td{background:rgba(79,142,247,0.08)!important;font-weight:600;color:#7eb3ff}
+.clickable{cursor:pointer;border-radius:6px;padding:2px 8px;transition:all .2s;display:inline-block;font-weight:700;font-family:'DM Mono',monospace}
+.clickable-cap{color:#7eb3ff;background:rgba(79,142,247,0.1)}
+.clickable-cap:hover{background:rgba(79,142,247,0.25);transform:scale(1.05)}
+.clickable-loc{color:#4ade80;background:rgba(34,197,94,0.1)}
+.clickable-loc:hover{background:rgba(34,197,94,0.25);transform:scale(1.05)}
+.chart-card{background:#13161f;border-radius:14px;padding:16px 18px;border:0.5px solid rgba(255,255,255,0.07)}
+.chart-lbl{font-size:12px;font-weight:600;color:#6b7280;margin-bottom:12px;letter-spacing:0.3px}
+/* CAPTADORES */
+.cap-cards{display:flex;gap:16px}
+.cap-card{flex:1;border-radius:12px;padding:14px 16px;text-align:center;cursor:pointer;transition:all .25s;box-shadow:0 2px 6px rgba(0,0,0,0.35)}
+.cap-card:hover{transform:translateY(-3px);filter:brightness(1.2)}
+.cap-name{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.cap-val{font-size:42px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+.cap-sub{font-size:11px;color:#6b7280;margin-top:4px}
+.cap-hint{font-size:10px;color:#4b5563;margin-top:6px}
+/* DESTAQUES */
+.destaque-row{display:flex;gap:16px}
+.destaque{flex:1;border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.35)}
+.dest-lbl{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.dest-nome{font-size:36px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.1}
+.dest-sub{font-size:14px;color:#6b7280}
+/* MODAL BASE */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:#13161f;border-radius:18px;border:0.5px solid rgba(255,255,255,0.1);width:90vw;max-width:1000px;max-height:88vh;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s;overflow:hidden}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:0.5px solid rgba(255,255,255,0.08);flex-shrink:0}
+.modal-title{display:flex;align-items:center;gap:10px}
+.modal-title h3{font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.modal-close{width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#9ca3af;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:rgba(239,68,68,0.2);color:#f87171}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1}
+.modal-footer{padding:12px 24px;border-top:0.5px solid rgba(255,255,255,0.08);display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;background:#0f1118}
+/* MODAL TABELA */
+.tabela{width:100%;border-collapse:collapse;font-size:12.5px}
+.tabela th{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#6b7280;padding:12px 16px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.1);white-space:nowrap}
+.tabela td{padding:12px 16px;border-bottom:0.5px solid rgba(255,255,255,0.05);color:#d1d5db;vertical-align:middle;white-space:nowrap}
+.tabela tr:hover td{background:rgba(255,255,255,0.025)}
+.tabela tr:last-child td{border-bottom:none}
+.modal-table{width:100%;border-collapse:collapse;font-size:13px}
+.modal-table th{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#6b7280;padding:10px 12px;text-align:left;background:#0d1016;border-bottom:0.5px solid rgba(255,255,255,0.08);white-space:nowrap;position:sticky;top:0}
+.modal-table td{padding:11px 12px;border-bottom:0.5px solid rgba(255,255,255,0.05);color:#d1d5db;vertical-align:middle}
+.modal-table tr:nth-child(even) td{background:#0f1218}
+.modal-table tr:last-child td{border-bottom:none}
+.modal-table tr:hover td{background:rgba(255,255,255,0.03)}
+.pill{font-size:11px;padding:3px 10px;border-radius:4px;font-weight:600;white-space:nowrap;display:inline-block}
+.p-blue{background:rgba(79,142,247,0.15);color:#7eb3ff}
+.p-green{background:rgba(34,197,94,0.15);color:#4ade80}
+.p-purple{background:rgba(168,85,247,0.15);color:#c084fc}
+.p-gray{background:rgba(107,114,128,0.2);color:#9ca3af}
+.p-amber{background:rgba(245,158,11,0.15);color:#fbbf24}
+.p-teal{background:rgba(20,184,166,0.15);color:#2dd4bf}
+/* MODAL CAPTADOR */
+.cap-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
+.cap-kpi{background:#0f1118;border-radius:10px;padding:12px 14px;border:0.5px solid rgba(255,255,255,0.07)}
+.cap-kpi-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:5px}
+.cap-kpi-val{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+.cap-kpi-sub{font-size:11px;color:#6b7280;margin-top:3px}
+.mensal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin-bottom:16px}
+.mensal-card{background:#0f1118;border-radius:8px;padding:10px 8px;text-align:center;border:0.5px solid rgba(255,255,255,0.07)}
+.mensal-mes{font-size:10px;color:#6b7280;margin-bottom:4px;font-weight:600;text-transform:uppercase}
+.mensal-val{font-size:24px;font-weight:700;font-family:'DM Mono',monospace}
+.mensal-sub{font-size:10px;color:#6b7280;margin-top:2px}
+.cap-section{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin:16px 0 10px}
+.cap-dist-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cap-dist-lbl{font-size:12px;color:#9ca3af;min-width:160px}
+.cap-dist-track{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;display:flex}
+.cap-dist-num{font-size:12px;font-weight:700;color:#e2e8f0;min-width:60px;text-align:right;font-family:'DM Mono',monospace}
+
+/* --- Ano toggle & estados extras --- */
+.year-toggle{display:flex;gap:8px;background:rgba(255,255,255,0.04);padding:4px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.08)}
+.year-btn{padding:8px 22px;border-radius:7px;border:none;background:transparent;color:#8b96ab;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.year-btn.active{background:linear-gradient(90deg,#4f8ef7,#7eb3ff);color:#0c0e15}
+.year-btn:hover:not(.active){color:#e5e9f0;background:rgba(255,255,255,0.06)}
+.pending-banner{background:rgba(245,158,11,0.08);border:0.5px solid rgba(245,158,11,0.25);border-radius:10px;padding:14px 18px;font-size:12.5px;color:#fbbf24;display:flex;align-items:center;gap:10px}
+.pending-value{color:#6b7280 !important}
+#singleYearView, #comparativoView{display:flex;flex-direction:column;gap:18px}
+.cmp-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.06)}
+.cmp-row:last-child{border-bottom:none}
+.cmp-lbl{font-size:13px;color:#9ca3af;flex:1}
+.cmp-vals{display:flex;align-items:center;gap:14px}
+.cmp-val{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;min-width:70px;text-align:right}
+.cmp-delta{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;min-width:76px;text-align:center;display:inline-flex;align-items:center;gap:4px;justify-content:center}
+.cmp-up{background:rgba(34,197,94,0.15);color:#4ade80}
+.cmp-down{background:rgba(239,68,68,0.15);color:#f87171}
+.cmp-flat{background:rgba(107,114,128,0.15);color:#9ca3af}
+.cmp-year-lbl{font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px}
+
+</style>
+</head>
+<body>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;position:relative;z-index:1">
+  <div>
+    <div class="h-sub" style="color:#7eb3ff;font-weight:700;letter-spacing:2px;font-size:12px;text-transform:uppercase">Segue Imobiliária</div>
+    <h1 style="font-size:30px;font-weight:700;margin-top:4px">Dashboard Anual de Resultados</h1>
+    <div class="h-sub" id="periodoLabel" style="margin-top:4px"></div>
+  </div>
+  <div class="year-toggle" id="yearToggle"></div>
+</div>
+
+<div id="singleYearView">
+<div id="pendingBanner"></div>
+
+<div class="g6" id="kpiRow" style="position:relative;z-index:1"></div>
+
+<div class="destaque-row" id="destaqueRow" style="position:relative;z-index:1"></div>
+
+<div style="position:relative;z-index:1">
+  <div class="cap-section" style="margin-bottom:10px">Captações por Colaborador</div>
+  <div class="cap-cards" id="capCardsRow"></div>
+</div>
+
+<div class="g2" style="position:relative;z-index:1">
+  <div class="card">
+    <div class="chart-lbl">Exclusividade</div>
+    <div id="barExclusividade"></div>
+    <hr>
+    <div class="chart-lbl">Origem</div>
+    <div id="barOrigem"></div>
+  </div>
+  <div class="card">
+    <div class="chart-lbl">Tipo de Contrato</div>
+    <div id="barContrato"></div>
+    <hr>
+    <div class="chart-lbl">Destinação</div>
+    <div id="barDestinacaoCap"></div>
+  </div>
+</div>
+
+<div class="g2" style="position:relative;z-index:1">
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <div class="chart-lbl">Tipo de Locação</div>
+    <div id="barTipoLoc"></div>
+    <hr>
+    <div class="chart-lbl">Destinação</div>
+    <div id="barDestinacaoLoc"></div>
+  </div>
+  <div class="card">
+    <div class="chart-lbl">Garantia Locatícia Acumulada</div>
+    <div id="chipGarantia" style="display:flex;gap:14px;margin-bottom:14px"></div>
+    <div id="barGarantia"></div>
+  </div>
+</div>
+
+<div id="carteiraSection" style="position:relative;z-index:1"></div>
+
+<div class="g3" style="position:relative;z-index:1">
+  <div class="card" style="height:280px">
+    <div class="chart-lbl">Captações e Locações por Mês</div>
+    <div style="height:220px"><canvas id="chartCL"></canvas></div>
+  </div>
+  <div class="card" style="height:280px">
+    <div class="chart-lbl">VGL por Mês (R$)</div>
+    <div style="height:220px"><canvas id="chartVGL"></canvas></div>
+  </div>
+  <div class="card" style="height:280px">
+    <div class="chart-lbl">Ticket Médio por Mês (R$)</div>
+    <div style="height:220px"><canvas id="chartTicket"></canvas></div>
+  </div>
+</div>
+
+<div class="card" style="position:relative;z-index:1">
+  <div class="chart-lbl" id="tabelaLbl" style="margin-bottom:12px">Resultados Mensais</div>
+  <div style="overflow-x:auto">
+    <table class="tabela" id="tabelaMensal">
+      <thead><tr id="tabelaHeadRow"></tr></thead>
+      <tbody id="tabelaBody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<div id="comparativoView" style="display:none">
+  <div class="pending-banner" id="compareBanner" style="border-color:rgba(79,142,247,0.25);background:rgba(79,142,247,0.08);color:#7eb3ff"></div>
+
+  <div class="card" id="crescimentoGeralCard"></div>
+
+  <div class="g6" id="compareKpiRow" style="margin-top:14px"></div>
+
+  <div class="g2" style="margin-top:14px">
+    <div class="card">
+      <div class="chart-lbl">Captações por Colaborador — 2025 vs 2026</div>
+      <div id="compareCaptadores"></div>
+    </div>
+    <div class="card">
+      <div class="chart-lbl">Perfil da Captação — variação de mix</div>
+      <div id="comparePerfilCap"></div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-top:14px">
+    <div class="card">
+      <div class="chart-lbl">Perfil da Locação — variação de mix</div>
+      <div id="comparePerfilLoc"></div>
+    </div>
+    <div class="card">
+      <div class="chart-lbl">Garantia Locatícia — variação de mix</div>
+      <div id="compareGarantia"></div>
+    </div>
+  </div>
+
+  <div class="card" id="compareVglTipoCard" style="margin-top:14px"></div>
+
+  <div class="g2" style="margin-top:14px">
+    <div class="card" style="height:280px">
+      <div class="chart-lbl">Captações por Mês — 2025 vs 2026</div>
+      <div style="height:220px"><canvas id="chartCompareCap"></canvas></div>
+    </div>
+    <div class="card" style="height:280px">
+      <div class="chart-lbl">Locações por Mês — 2025 vs 2026</div>
+      <div style="height:220px"><canvas id="chartCompareLoc"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="height:280px;margin-top:14px">
+    <div class="chart-lbl">VGL por Mês — 2025 vs 2026 (R$)</div>
+    <div style="height:220px"><canvas id="chartCompareVGL"></canvas></div>
+  </div>
+
+  <div id="carteiraCompareSection" style="margin-top:14px"></div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="chart-lbl" style="margin-bottom:12px">Comparativo Mês a Mês (mesmo período)</div>
+    <div style="overflow-x:auto">
+      <table class="tabela" id="tabelaComparativo">
+        <thead><tr id="compareTabelaHead"></tr></thead>
+        <tbody id="compareTabelaBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: lista mensal (captacao/locacao) -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="mTitulo"></div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <table class="modal-table">
+        <thead><tr id="mHead"></tr></thead>
+        <tbody id="mBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer" id="mFooter"></div>
+  </div>
+</div>
+
+<!-- MODAL: captador -->
+<div class="modal-overlay" id="capModalOverlay" onclick="if(event.target===this)closeCapModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="capTitulo"></div>
+      <button class="modal-close" onclick="closeCapModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="cap-kpis" id="capKpis" style="margin-bottom:18px"></div>
+      <div class="mensal-grid" id="capMensal"></div>
+      <div class="cap-section" style="margin-top:18px">Lista de Imóveis Captados</div>
+      <table class="modal-table">
+        <thead><tr><th>Imóvel</th><th>Valor</th><th>Mês</th><th>Exclusivo</th><th>Origem</th><th>Destinação</th><th>Contrato</th></tr></thead>
+        <tbody id="capBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VGL detalhado (Novas x Relocacoes) -->
+<div class="modal-overlay" id="vglModalOverlay" onclick="if(event.target===this)closeVglModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="vglTitulo"></div>
+      <button class="modal-close" onclick="closeVglModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="cap-kpis" id="vglKpis" style="margin-bottom:18px"></div>
+      <div style="height:14px"></div>
+      <div id="vglBarSplit"></div>
+    </div>
+  </div>
+</div>
+<script>
+const DASHBOARD_VERSION = 2;
+const DEFAULT_YEARS = {"2026": {"label": "2026", "meses": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set"], "mesesLabel": {"jan": "Janeiro", "fev": "Fevereiro", "mar": "Março", "abr": "Abril", "mai": "Maio", "jun": "Junho", "jul": "Julho", "ago": "Agosto", "set": "Setembro"}, "dbCap": {"jan": [["Ed. Salgueiro, 401", "R$ 1.950", "Luca", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Galpao Guaranhuns", "R$ 4.000", "Roger", "Exclusivo", "Externo", "Comercial", "CA", "-"], ["Ed. Minas Gerais, 100", "R$ 2.900", "Luca", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Ed. Lua Azul, 202", "R$ 1.500", "Roger", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Ed. Lua Azul, 302", "R$ 1.400", "Roger", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Ed. Cannes, 202", "R$ 3.200", "Roger", "Exclusivo", "Interno", "Residencial", "CA", "-"], ["Ed. Praia da Costa Offices, 303", "R$ 1.900", "Luca", "Sem excl.", "Externo", "Comercial", "CA", "-"], ["Ed. Liberty 205, 1102 A", "R$ 4.000", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Ponto Comercial Itapua", "R$ 15.000", "Luca", "Sem excl.", "Externo", "Comercial", "SA", "-"], ["Cond. Costa Bella, 1303 Praias", "R$ 1.700", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Ed. Granville, 210", "R$ 2.200", "Roger", "Exclusivo", "Interno", "Residencial", "CA", "-"], ["Ed. Leo Palombini Neto, 803", "R$ 3.000", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Ed. Manoel P. dos Santos, 1001", "R$ 4.800", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Santa Barbara, 401", "R$ 3.950", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Mar do Caribe, 1101", "R$ 6.200", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Acquabella, 1104", "R$ 3.200", "Roger", "Exclusivo", "Interno", "Residencial", "CA", "-"], ["Ed. Jean Clouet, 301", "R$ 5.500", "Roger", "Sem excl.", "Externo", "Residencial", "CA", "-"]], "fev": [["Ed. Aquarius, 602", "R$ 2.700", "Roger", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Pitomba, 202", "R$ 3.500", "Luca", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Ed. Sintra, 104 T5", "R$ 1.600", "Roger", "Sem excl.", "Interno", "Residencial", "CA", "-"], ["Ed. Sintra, 304 T9", "R$ 1.500", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Ed. Ilhas Marshall, 605", "R$ 3.000", "Luca", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Ed. Coutinho, 301", "R$ 1.800", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Predio na Deolindo Perim", "R$ 50.000", "Luca", "Sem excl.", "Externo", "Comercial", "CA", "-"], ["Ed. The Point Office, 803", "R$ 800", "Luca", "Sem excl.", "Externo", "Comercial", "CA", "-"], ["Ed. Gahe, 01", "R$ 1.500", "Luca", "Exclusivo", "Externo", "Comercial", "CA", "-"], ["Ed. Meridional Office, 504", "R$ 1.200", "Luca", "Sem excl.", "Externo", "Comercial", "CA", "-"], ["Ed. Burie Marx", "R$ 11.900", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Gahe, 02", "R$ 1.500", "Luca", "Exclusivo", "Externo", "Comercial", "CA", "-"], ["Ed. Gahe, 03", "R$ 1.750", "Luca", "Exclusivo", "Externo", "Comercial", "CA", "-"], ["Ed. Gahe, 04", "R$ 1.950", "Luca", "Exclusivo", "Externo", "Comercial", "CA", "-"], ["Ed. Gahe, 05", "R$ 2.100", "Luca", "Exclusivo", "Externo", "Comercial", "CA", "-"]], "mar": [["Res. Lucas, 301", "R$ 5.500", "Luca", "Exclusivo", "Interno", "Residencial", "CA", "-"], ["Liberty, 1303B", "R$ 3.500", "Roger", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Prisciliana, 100", "R$ 1.200", "Luca", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Gahe Clinica", "R$ 5.500", "Luca", "Sem excl.", "Externo", "Comercial", "CA", "-"], ["Prisciliana, 01", "R$ 1.400", "Luca", "Sem excl.", "Externo", "Comercial", "SA", "-"], ["Monalisa, 101", "R$ 15.000", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Prisciliana, 02", "R$ 700", "Luca", "Sem excl.", "Externo", "Comercial", "SA", "-"], ["Muller, 102", "R$ 2.800", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Infinity, 2809", "R$ 3.750", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Casa Prainha", "R$ 6.000", "Luca", "Sem excl.", "Externo", "Comercial", "SA", "-"], ["Praia Sol II, 203 G", "R$ 1.950", "Luca", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Grand House, 503 A", "R$ 7.500", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Dumont, 406", "R$ 3.200", "Roger", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Galpao Pontal das Garcas", "R$ 3.500", "Luca", "Sem excl.", "Externo", "Comercial", "SA", "-"]], "abr": [["Ed. Maringa, 403", "R$ 3.000", "Roger", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Villaggio Limoeiro, 604", "R$ 3.200", "Roger", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Casa em Itapua", "R$ 3.200", "Luca", "Sem excl.", "Externo", "Residencial", "SA", "-"]], "mai": [["Ed. Village Guarani, 902 B", "R$ 5.500", "Roger", "Exclusivo", "Interno", "Residencial", "CA", "-"], ["Ed. Mario Archer, 302", "R$ 2.600", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Ed. Liberty 205, 504 A", "R$ 3.700", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Praia Azul, 401 B", "R$ 3.500", "Roger", "Exclusivo", "Interno", "Residencial", "CA", "-"], ["Loja Ponta da Fruta, 01", "R$ 1.600", "Roger", "Exclusivo", "Interno", "Comercial", "CA", "-"], ["Loja Ponta da Fruta, 02", "R$ 1.300", "Roger", "Exclusivo", "Interno", "Comercial", "CA", "-"], ["Cond. Parque Colombo, 305 B5", "R$ 1.900", "Sara", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Loja Santa Lucia", "R$ 3.900", "Sara", "Sem excl.", "Externo", "Comercial", "SA", "-"], ["Ed. Arpoador, 704", "R$ 4.500", "Roger", "Sem excl.", "Externo", "Residencial", "SA", "-"]], "jun": [["Ed. Boa Esperanca, 303 B4", "R$ 3.000", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Parque Pelicano, 408 B2", "R$ 2.300", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Vernazza, 403", "R$ 7.000", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Loja Antonio Ataide, 904", "R$ 6.500", "Sara", "Sem excl.", "Externo", "Comercial", "SA", "-"]], "jul": [["Ed. Angelo Menini, 204", "R$ 6.800", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "SDR Leo"], ["Ed. Atlantico II, 202", "R$ 2.200", "Sara", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Casa Guaranhuns", "R$ 2.200", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Parque Terra Nova, 507", "R$ 2.090", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Ed. Praia Center, sala 306", "R$ 1.200", "Sara", "Sem excl.", "Externo", "Comercial", "SA", "SDR Leo"], ["Ed. Atafona, 603", "R$ 2.300", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Parque Terra Nova, 708", "R$ 2.500", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "SDR Ana Carolina"], ["Golden Business, 308", "R$ 1.300", "Sara", "Sem excl.", "Externo", "Comercial", "CA", "-"], ["Champagnat Center, sala 106", "R$ 800", "Roger", "Exclusivo", "Externo", "Comercial", "CA", "-"], ["Champagnat Center, sala 205", "R$ 800", "Roger", "Exclusivo", "Externo", "Comercial", "CA", "-"], ["Palm Beach, 803 A", "R$ 7.000", "Roger", "Sem excl.", "Externo", "Residencial", "CA", "SDR Ana Carolina"], ["Vila Flora, Loja 01 e 02", "R$ 8.000", "Roger", "Sem excl.", "Interno", "Comercial", "CA", "-"], ["Vila Flora, Loja 05", "R$ 3.500", "Roger", "Sem excl.", "Interno", "Comercial", "CA", "-"], ["Loja Hugo Musso", "R$ 3.500", "Sara", "Sem excl.", "Externo", "Comercial", "SA", "-"]], "ago": [["3º Etapa, Alamanda, 402", "R$ 2.400", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Galeria Mar I Luz, Salão", "R$ 12.000", "Roger", "Sem excl.", "Externo", "Comercial", "SA", "-"], ["Golden Business, Sala 113", "R$ 1.400", "Sara", "Sem excl.", "Externo", "Comercial", "CA", "-"], ["Village Guarani, 906 A", "R$ 3.900", "Sara", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Galeria Mar I Luz, loja 08", "R$ 1.800", "Roger", "Sem excl.", "Externo", "Comercial", "SA", "-"], ["Jazz Residence, 1404 B", "R$ 7.000", "Roger", "Exclusivo", "Interno", "Residencial", "CA", "-"], ["Malaga, 803", "R$ 2.900", "Roger", "Exclusivo", "Externo", "Residencial", "CA", "-"], ["Casa Maria Ortiz", "R$ 6.000", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "SDR Leonardo"], ["Mares da Costa, São Rafael, 1002", "R$ 6.000", "Sara", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Gameleira, 201", "R$ 1.200", "Sara", "Exclusivo", "Externo", "Residencial", "CA", "SDR Leonardo"], ["Jazz Residence, 610 B", "R$ 6.500", "Roger", "Sem excl.", "Externo", "Residencial", "SA", "-"], ["Casa Interlagos, 203", "R$ 15.000", "Ana Carolina", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Clermont Ferrand, 502", "R$ 7.000", "Ana Carolina", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Golden Gate, 203", "R$ 3.600", "Ana Carolina", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Chiabbai Martins, 1403", "R$ 3.500", "Ana Carolina", "Sem excl.", "Externo", "Residencial", "CA", "-"]], "set": [["Ilhas Manhattan, Loja 05", "R$ 3.500", "Ana Carolina", "Exclusivo", "Externo", "Comercial", "SA", "-"], ["Quattro, 1110 Torre B", "R$ 2.200", "Ana Carolina", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Vila Manguinhos, 507", "R$ 2.000", "Ana Carolina", "Sem excl.", "Externo", "Residencial", "CA", "-"], ["Chateaux de France, 108", "R$ 2.500", "Ana Carolina", "Sem excl.", "Externo", "Residencial", "CA", "-"]]}, "dbLoc": {"jan": [["Ed. Riserva, 1604", "R$ 16.000", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Serra Leoa, 303", "R$ 4.000", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Cond. Spazio Vintage, 101", "R$ 4.000", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Liberty, 505A", "R$ 3.000", "Beatriz", "50%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Liberty, 506A", "R$ 3.000", "Beatriz", "40%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Columbia, 203", "R$ 1.100", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Ed. Bella Vita, 702", "R$ 1.500", "Beatriz", "50%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Ed. Bella Vita, 904", "R$ 1.500", "Beatriz", "50%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Ed. Columbia, 208", "R$ 1.100", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Golden Business, Sala 612", "R$ 900", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Comercial"], ["Ed. Cote DAzur, 1504", "R$ 6.000", "Beatriz", "50%", "10%", "Caução", "Relocação", "Residencial"], ["Ed. Sintra, 204", "R$ 1.500", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"]], "fev": [["Aquarius, 602", "R$ 5.500", "Beatriz", "100%", "10%", "Caução", "Nova", "Residencial"], ["Costa Bella, 1303", "R$ 1.600", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Leo Palombini Neto, 803", "R$ 3.000", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Columbia, 102", "R$ 1.100", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Columbia, 209", "R$ 1.200", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Ed. Granville, 210", "R$ 2.200", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Acquabella, 1504", "R$ 2.700", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Buganville, 302", "R$ 2.100", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Res. Jardim Guadalajara, 2008", "R$ 2.700", "Beatriz", "70%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Pitomba, 202", "R$ 3.500", "Beatriz", "70%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Sintra, 103", "R$ 1.600", "Beatriz", "60%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Sintra, 304", "R$ 1.500", "Beatriz", "80%", "10%", "S.F. Tokio", "Nova", "Residencial"], ["Ed. Columbia, 112", "R$ 1.100", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Amazonia Residencial, 607", "R$ 2.600", "Beatriz", "60%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Salgueiro, 401", "R$ 1.750", "Beatriz", "100%", "10%", "S.F. Porto", "Nova", "Residencial"]], "mar": [["Ed. Coutinho, 301", "R$ 1.800", "Beatriz", "100%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Liberty, 1102 A", "R$ 3.850", "Beatriz", "40%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Columbia, 109", "R$ 1.200", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["PRU, Harward, 306", "R$ 2.500", "Beatriz", "50%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Casa Itaparica", "R$ 11.000", "Beatriz", "100%", "10%", "Caução", "Nova", "Residencial"], ["Bella Vita, 1104", "R$ 1.500", "Beatriz", "50%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Recanto de Camburi, 606H", "R$ 2.700", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"]], "abr": [["Ed. Muller, 104", "R$ 2.800", "Beatriz", "100%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Coutinho, 202", "R$ 2.000", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Infinity, 2809", "R$ 3.750", "Beatriz", "50%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Liberty, 1303 A", "R$ 3.100", "Beatriz", "100%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Golden Business, 613/614", "R$ 1.800", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Comercial"], ["Ed. Bella Vita, 1001", "R$ 1.500", "Beatriz", "50%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Loja 03, Nazareth", "R$ 1.215", "Beatriz", "60%", "10%", "Sem garantia", "Relocação", "Comercial"]], "mai": [["Ed. Columbia, 206", "R$ 1.200", "Beatriz", "60%", "10%", "Caução", "Relocação", "Residencial"], ["Cond. Grand House, 503 A", "R$ 7.500", "Beatriz", "50%", "8%", "Caução", "Nova", "Residencial"], ["Loja 02, Nazareth", "R$ 2.200", "Beatriz", "60%", "10%", "Caução", "Relocação", "Comercial"], ["Bella Vita, 709", "R$ 1.500", "Beatriz", "50%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Columbia, 107", "R$ 1.300", "Beatriz", "60%", "10%", "Caução", "Relocação", "Residencial"], ["Sala 02, Santa Monica", "R$ 1.300", "Beatriz", "60%", "10%", "Caução", "Nova", "Comercial"], ["Ed. Dumont, 406", "R$ 2.900", "Beatriz", "100%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Liberty, 1005 A", "R$ 2.900", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Ed. Golden Business, 613/614", "R$ 1.600", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Comercial"]], "jun": [["Ed. Mario Archer, 302", "R$ 2.500", "Beatriz", "70%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Ed. Ilha de Santorini, 1004", "R$ 3.800", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Cond. Viver Horto da Serra, 1006", "R$ 1.600", "Beatriz", "50%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Columbia, 409", "R$ 1.200", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Columbia, 112", "R$ 1.200", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Columbia, 405", "R$ 1.200", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"]], "jul": [["Villaggio Itaparica, 502 A", "R$ 2.790", "Beatriz", "50%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Blue Tower, 302", "R$ 6.100", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Columbia, 203", "R$ 1.200", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Ed. Monte Carlo, 302", "R$ 6.500", "Beatriz", "60%", "7%", "S.F. Tokio", "Relocação", "Residencial"], ["Bella Vita, 508", "R$ 1.600", "Beatriz", "50%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Villaggio Laranjeiras, 806 A5", "R$ 2.800", "Sem assistente", "50%", "10%", "Caução", "Nova", "Residencial"], ["Bella Vita, 610", "R$ 1.550", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Columbia, 308", "R$ 1.200", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Atafona, 603", "R$ 2.100", "Beatriz", "100%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Bella Vita, 904", "R$ 1.550", "Beatriz", "50%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Vista do Vale, 305 E", "R$ 1.700", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Costa Blanca, 301", "R$ 3.700", "Beatriz", "60%", "10%", "Caução", "Relocação", "Residencial"], ["Village Guarani, 902 B", "R$ 4.700", "Beatriz", "60%", "10%", "Sem garantia", "Nova", "Residencial"]], "ago": [["Praia Azul, 401 B", "R$ 2.800", "Beatriz", "50%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Spazio Vila das Conchas, 903 T3", "R$ 1.650", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Vista do Vale, 804 Torre B", "R$ 1.750", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Parque Terra Nova, 708", "R$ 2.400", "Beatriz", "100%", "10%", "S.F. Porto", "Nova", "Residencial"], ["Golden Business, 113", "R$ 1.400", "Beatriz", "100%", "10%", "Caução", "Nova", "Comercial"], ["Coutinho, 202", "R$ 2.200", "Beatriz", "60%", "10%", "Caução", "Relocação", "Residencial"], ["Columbia, 211", "R$ 1.150", "Beatriz", "60%", "10%", "Caução", "Relocação", "Residencial"], ["Jazz Residence, 1404 B", "R$ 6.700", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"]], "set": [["Jazz Residence 809 B", "R$ 6.000", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Coutinho, 203", "R$ 2.600", "Beatriz", "60%", "10%", "S.F. Porto", "Relocação", "Residencial"], ["Vila Safira, 401 B11", "R$ 1.400", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Residencial"], ["Bella Vita, 709", "R$ 1.550", "Beatriz", "60%", "10%", "S.F. Tokio", "Relocação", "Residencial"]]}, "caps": {"jan": [{"n": "Ed. Salgueiro, 401", "v": 1950, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Galpao Guaranhuns", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Minas Gerais, 100", "v": 2900, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Ed. Lua Azul, 202", "v": 1500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Ed. Lua Azul, 302", "v": 1400, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Ed. Cannes, 202", "v": 3200, "excl": "Exclusivo", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Praia da Costa Offices, 303", "v": 1900, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Liberty 205, 1102 A", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ponto Comercial Itapua", "v": 15000, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Cond. Costa Bella, 1303 Praias", "v": 1700, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Granville, 210", "v": 2200, "excl": "Exclusivo", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Leo Palombini Neto, 803", "v": 3000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Manoel P. dos Santos, 1001", "v": 4800, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Santa Barbara, 401", "v": 3950, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Mar do Caribe, 1101", "v": 6200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Acquabella, 1104", "v": 3200, "excl": "Exclusivo", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Jean Clouet, 301", "v": 5500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}], "fev": [{"n": "Ed. Aquarius, 602", "v": 2700, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Pitomba, 202", "v": 3500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Sintra, 104 T5", "v": 1600, "excl": "Sem excl.", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Sintra, 304 T9", "v": 1500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Ilhas Marshall, 605", "v": 3000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Ed. Coutinho, 301", "v": 1800, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Predio na Deolindo Perim", "v": 50000, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. The Point Office, 803", "v": 800, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Gahe, 01", "v": 1500, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Meridional Office, 504", "v": 1200, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Burie Marx", "v": 11900, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Gahe, 02", "v": 1500, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Gahe, 03", "v": 1750, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Gahe, 04", "v": 1950, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Ed. Gahe, 05", "v": 2100, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}], "mar": [{"n": "Res. Lucas, 301", "v": 5500, "excl": "Exclusivo", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Liberty, 1303B", "v": 3500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Prisciliana, 100", "v": 1200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Gahe Clinica", "v": 5500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Prisciliana, 01", "v": 1400, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Monalisa, 101", "v": 15000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Prisciliana, 02", "v": 700, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Muller, 102", "v": 2800, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Infinity, 2809", "v": 3750, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Casa Prainha", "v": 6000, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Praia Sol II, 203 G", "v": 1950, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Grand House, 503 A", "v": 7500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Dumont, 406", "v": 3200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Galpao Pontal das Garcas", "v": 3500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}], "abr": [{"n": "Ed. Maringa, 403", "v": 3000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Villaggio Limoeiro, 604", "v": 3200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Casa em Itapua", "v": 3200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}], "mai": [{"n": "Ed. Village Guarani, 902 B", "v": 5500, "excl": "Exclusivo", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Mario Archer, 302", "v": 2600, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Liberty 205, 504 A", "v": 3700, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Praia Azul, 401 B", "v": 3500, "excl": "Exclusivo", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Loja Ponta da Fruta, 01", "v": 1600, "excl": "Exclusivo", "orig": "Interno", "dest": "Comercial", "cont": "CA"}, {"n": "Loja Ponta da Fruta, 02", "v": 1300, "excl": "Exclusivo", "orig": "Interno", "dest": "Comercial", "cont": "CA"}, {"n": "Cond. Parque Colombo, 305 B5", "v": 1900, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Loja Santa Lucia", "v": 3900, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Ed. Arpoador, 704", "v": 4500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}], "jun": [{"n": "Ed. Boa Esperanca, 303 B4", "v": 3000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Parque Pelicano, 408 B2", "v": 2300, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Vernazza, 403", "v": 7000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Loja Antonio Ataide, 904", "v": 6500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}], "jul": [{"n": "Ed. Angelo Menini, 204", "v": 6800, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA", "sdr": "SDR Leo"}, {"n": "Ed. Atlantico II, 202", "v": 2200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Casa Guaranhuns", "v": 2200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Parque Terra Nova, 507", "v": 2090, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Ed. Praia Center, sala 306", "v": 1200, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA", "sdr": "SDR Leo"}, {"n": "Ed. Atafona, 603", "v": 2300, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Parque Terra Nova, 708", "v": 2500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA", "sdr": "SDR Ana Carolina"}, {"n": "Golden Business, 308", "v": 1300, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Champagnat Center, sala 106", "v": 800, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Champagnat Center, sala 205", "v": 800, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Palm Beach, 803 A", "v": 7000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA", "sdr": "SDR Ana Carolina"}, {"n": "Vila Flora, Loja 01 e 02", "v": 8000, "excl": "Sem excl.", "orig": "Interno", "dest": "Comercial", "cont": "CA"}, {"n": "Vila Flora, Loja 05", "v": 3500, "excl": "Sem excl.", "orig": "Interno", "dest": "Comercial", "cont": "CA"}, {"n": "Loja Hugo Musso", "v": 3500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}], "ago": [{"n": "3º Etapa, Alamanda, 402", "v": 2400, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Galeria Mar I Luz, Salão", "v": 12000, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Golden Business, Sala 113", "v": 1400, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "CA"}, {"n": "Village Guarani, 906 A", "v": 3900, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Galeria Mar I Luz, loja 08", "v": 1800, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Jazz Residence, 1404 B", "v": 7000, "excl": "Exclusivo", "orig": "Interno", "dest": "Residencial", "cont": "CA"}, {"n": "Malaga, 803", "v": 2900, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Casa Maria Ortiz", "v": 6000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA", "sdr": "SDR Leonardo"}, {"n": "Mares da Costa, São Rafael, 1002", "v": 6000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Gameleira, 201", "v": 1200, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "CA", "sdr": "SDR Leonardo"}, {"n": "Jazz Residence, 610 B", "v": 6500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "SA"}, {"n": "Casa Interlagos, 203", "v": 15000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Clermont Ferrand, 502", "v": 7000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Golden Gate, 203", "v": 3600, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Chiabbai Martins, 1403", "v": 3500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}], "set": [{"n": "Ilhas Manhattan, Loja 05", "v": 3500, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "SA"}, {"n": "Quattro, 1110 Torre B", "v": 2200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Vila Manguinhos, 507", "v": 2000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}, {"n": "Chateaux de France, 108", "v": 2500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "CA"}]}, "capPorMes": {"jan": {"Roger": ["Ed. Salgueiro, 401", "Ed. Lua Azul, 202", "Ed. Lua Azul, 302", "Ed. Cannes, 202", "Ed. Liberty 205, 1102 A", "Cond. Costa Bella, 1303 Praias", "Ed. Granville, 210", "Ed. Leo Palombini Neto, 803", "Ed. Acquabella, 1104", "Ed. Jean Clouet, 301"], "Luca": ["Galpao Guaranhuns", "Ed. Minas Gerais, 100", "Ed. Praia da Costa Offices, 303", "Ponto Comercial Itapua", "Ed. Manoel P. dos Santos, 1001", "Ed. Santa Barbara, 401", "Ed. Mar do Caribe, 1101"], "Sara": []}, "fev": {"Roger": ["Ed. Aquarius, 602", "Ed. Sintra, 104 T5", "Ed. Sintra, 304 T9", "Ed. Coutinho, 301"], "Luca": ["Ed. Pitomba, 202", "Ed. Ilhas Marshall, 605", "Predio na Deolindo Perim", "Ed. The Point Office, 803", "Ed. Gahe, 01", "Ed. Meridional Office, 504", "Ed. Burie Marx", "Ed. Gahe, 02", "Ed. Gahe, 03", "Ed. Gahe, 04", "Ed. Gahe, 05"], "Sara": []}, "mar": {"Roger": ["Liberty, 1303B", "Grand House, 503 A", "Dumont, 406"], "Luca": ["Res. Lucas, 301", "Prisciliana, 100", "Gahe Clinica", "Prisciliana, 01", "Monalisa, 101", "Prisciliana, 02", "Muller, 102", "Infinity, 2809", "Casa Prainha", "Praia Sol II, 203 G", "Galpao Pontal das Garcas"], "Sara": []}, "abr": {"Roger": ["Ed. Maringa, 403", "Villaggio Limoeiro, 604"], "Luca": ["Casa em Itapua"], "Sara": []}, "mai": {"Roger": ["Ed. Village Guarani, 902 B", "Ed. Mario Archer, 302", "Ed. Praia Azul, 401 B", "Loja Ponta da Fruta, 01", "Loja Ponta da Fruta, 02", "Ed. Arpoador, 704"], "Luca": [], "Sara": ["Ed. Liberty 205, 504 A", "Cond. Parque Colombo, 305 B5", "Loja Santa Lucia"]}, "jun": {"Roger": ["Ed. Vernazza, 403"], "Luca": [], "Sara": ["Ed. Boa Esperanca, 303 B4", "Ed. Parque Pelicano, 408 B2", "Loja Antonio Ataide, 904"]}, "jul": {"Roger": ["Ed. Atafona, 603", "Champagnat Center, sala 106", "Champagnat Center, sala 205", "Palm Beach, 803 A", "Vila Flora, Loja 01 e 02", "Vila Flora, Loja 05"], "Luca": [], "Sara": ["Ed. Angelo Menini, 204", "Ed. Atlantico II, 202", "Casa Guaranhuns", "Ed. Parque Terra Nova, 507", "Ed. Praia Center, sala 306", "Parque Terra Nova, 708", "Golden Business, 308", "Loja Hugo Musso"]}, "ago": {"Sara": ["3º Etapa, Alamanda, 402", "Golden Business, Sala 113", "Village Guarani, 906 A", "Casa Maria Ortiz", "Mares da Costa, São Rafael, 1002", "Gameleira, 201"], "Roger": ["Galeria Mar I Luz, Salão", "Galeria Mar I Luz, loja 08", "Jazz Residence, 1404 B", "Malaga, 803", "Jazz Residence, 610 B"], "Luca": [], "Ana Carolina": ["Casa Interlagos, 203", "Clermont Ferrand, 502", "Golden Gate, 203", "Chiabbai Martins, 1403"]}, "set": {"Ana Carolina": ["Ilhas Manhattan, Loja 05", "Quattro, 1110 Torre B", "Vila Manguinhos, 507", "Chateaux de France, 108"]}}, "captadores": ["Roger", "Luca", "Sara", "Ana Carolina"], "assistentesLoc": ["Beatriz"], "metaMensal": 24000, "hasLoc": true, "carteira": {"jan": {"ativos": 137, "entraram": 12, "sairam": 3, "variacao": 9}, "fev": {"ativos": 146, "entraram": 15, "sairam": 6, "variacao": 9}, "mar": {"ativos": 148, "entraram": 7, "sairam": 5, "variacao": 2}, "abr": {"ativos": 144, "entraram": 5, "sairam": 9, "variacao": -4}, "mai": {"ativos": 145, "entraram": 9, "sairam": 8, "variacao": 1}, "jun": {"ativos": 145, "entraram": 6, "sairam": 6, "variacao": 0}, "jul": {"ativos": 154, "entraram": 13, "sairam": 4, "variacao": 9}, "ago": {"ativos": 156, "entraram": 8, "sairam": 8, "variacao": 0}}}, "2025": {"label": "2025", "meses": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"], "mesesLabel": {"jan": "Janeiro", "fev": "Fevereiro", "mar": "Março", "abr": "Abril", "mai": "Maio", "jun": "Junho", "jul": "Julho", "ago": "Agosto", "set": "Setembro", "out": "Outubro", "nov": "Novembro", "dez": "Dezembro"}, "dbCap": {"jan": [["Ilha de Okinawa, 1304", "R$ 2.700", "Marcos", "Sem excl.", "Externo", "Residencial", "S.A", "-"], ["Villa Flora, Loja 05", "R$ 3.200", "Roger", "Sem excl.", "Externo", "Comercial", "C.A", "-"], ["Cecilia Nitz, 308 B", "R$ 1.400", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Red Tower, 906", "R$ 2.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Costa D'Oro, 202", "R$ 4.000", "Marcos", "Exclusivo", "Externo", "Residencial", "S.A", "-"], ["Ilha de Okinawa, 1314", "R$ 2.800", "Marcos", "Sem excl.", "Externo", "Residencial", "S.A", "-"]], "fev": [["Nautilus, 302", "R$ 3.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Coutinho, 202", "R$ 2.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Bugatti, 703", "R$ 2.500", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Royal Light, 1206", "R$ 3.200", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Pacifico Res. Club, 405 B", "R$ 1.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Spazio Vila das Conchas, 305 T3", "R$ 1.300", "Marcos", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Novita, 1204", "R$ 5.300", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Mar I Luz, Loja 01", "R$ 3.800", "Roger", "Sem excl.", "Externo", "Comercial", "S.A", "-"]], "mar": [["Achiles Magioni, 1004", "R$ 5.500", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Centro Empresarial Moxuara, Sala 719 T3", "R$ 900", "Marcos", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Ilha das Antilhas, 1201", "R$ 3.300", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Casa Bela Aurora", "R$ 1.500", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Grand Canal, 505", "R$ 5.500", "Marcos", "Sem excl.", "Externo", "Residencial", "S.A", "-"], ["Vista do Vale, 305 E", "R$ 1.690", "Marcos", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Cote D'Azur, 1504 Nice", "R$ 4.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Vitória Office Tower, 311", "R$ 2.200", "Roger", "Sem excl.", "Externo", "Comercial", "C.A", "-"], ["Las Palmas, 0", "R$ 2.800", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"]], "abr": [["Malibu, 1402", "R$ 3.600", "Marcos", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Alberico Nicoletti, 301", "R$ 6.500", "Marcos", "Sem excl.", "Externo", "Residencial", "S.A", "-"], ["Praia Bonita, 503", "R$ 3.100", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Vista do Vale, 402 B", "R$ 1.600", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Vista do Vale, 304 B", "R$ 1.600", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"]], "mai": [["Verano, 105 A", "R$ 1.900", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Comercial Villaggio, 1507", "R$ 1.000", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Red Tower, 206", "R$ 2.800", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Carapina B3, 203 B8", "R$ 1.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"]], "jun": [["Cabernet, 601", "R$ 7.000", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Iaponã, 503", "R$ 4.500", "Roger", "Sem excl.", "Externo", "Residencial", "S.A", "-"], ["Mar de San Vicenzo, 402", "R$ 2.700", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Morales Bisiness, 1007", "R$ 1.300", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Vera Cruz, 1706B", "R$ 2.500", "Marcos", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Spazio Vintage, 804", "R$ 2.500", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"]], "jul": [["Conjuntos de Lojas Gil Veloso", "R$ 4.900", "Roger", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Liberty 205, 902 B", "R$ 4.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Recanto de Camburi, 1003 H", "R$ 2.600", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Ocean Ville, 932", "R$ 3.100", "Roger", "Exclusivo", "Externo", "Comercial", "C.A", "-"], ["Vista do Vale, 804 B", "R$ 1.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Verano, 507 A", "R$ 2.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Bachour, 1302", "R$ 2.700", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Jardim, 1004", "R$ 2.300", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"]], "ago": [["Bento Ferreira, Loja", "R$ 3.000", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Galpão 1000m² Bahamares", "R$ 15.000", "Roger", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Salão Ilha de Santa Maria, 01", "R$ 3.300", "Luca", "Exclusivo", "Externo", "Comercial", "S.A", "-"], ["Vinã Del Mar, 1102", "R$ 5.500", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Saint Patrick, 302", "R$ 10.000", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Villa Flora,  2102", "R$ 4.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Loja Ilha de Santa Maria, 02", "R$ 1.500", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Rabello, 302 B", "R$ 1.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Coutinho, 101", "R$ 2.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Model Glória, Loja 01", "R$ 1.100", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Loja Ilha de Santa Maria, 03", "R$ 4.500", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"]], "set": [["Carlos Berger, 01", "R$ 3.500", "Luca", "Sem excl.", "Externo", "Comercial", "C.A", "-"], ["loja Itapuã, 01", "R$ 5.500", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Liberty 205, 505 A", "R$ 3.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Darcy Monteiro, 1703", "R$ 1.700", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Verano, 1006 A", "R$ 2.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Costa Bella, 1103 A", "R$ 1.600", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Manhattan, 203", "R$ 4.000", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["American Towers, 803 Torre 2", "R$ 4.800", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Casa Praia da Costa, loja 01", "R$ 6.800", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Casa Praia da Costa, loja 02", "R$ 6.000", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"]], "out": [["Royal Center, Sala 17", "R$ 1.300", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Liberty 205, 1005 A", "R$ 3.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Liberty 205, 906 B", "R$ 3.200", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Liberty 205, 602 A", "R$ 3.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["kitnet Maruipe, 101", "R$ 1.500", "Luca", "Sem excl.", "Externo", "Residencial", "S.A", "-"], ["Imperial, 903", "R$ 4.800", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Praia Azul, 904 B", "R$ 3.650", "Luca", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["kitnet Maruipe, 301", "R$ 1.400", "Luca", "Exclusivo", "Externo", "Residencial", "S.A", "-"], ["Melia, 902", "R$ 3.500", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Victória Bay, 1802", "R$ 6.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Centro Empresarial Moxuara", "R$ 990", "Luca", "Sem excl.", "Externo", "Comercial", "C.A", "-"], ["Comercial Gaivotas", "R$ 4.850", "Luca", "Sem excl.", "Externo", "Comercial", "C.A", "-"], ["Infinity, 1109", "R$ 3.500", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Kitnet Maruipe, 104", "R$ 1.650", "Luca", "Sem excl.", "Externo", "Residencial", "S.A", "-"], ["Serpa, 304", "R$ 4.000", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["São Conrado, 302", "R$ 2.400", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Casa Comercial Enseada", "R$ 9.500", "Luca", "Sem excl.", "Externo", "Comercial", "C.A", "-"], ["Belize, 202", "R$ 3.300", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Monte Moria, 702", "R$ 4.500", "Roger", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Veneza, 401", "R$ 2.300", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"]], "nov": [["Costa Blanca, 301 A", "R$ 3.700", "Luca", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Casa Comercial Gaivotas, loja 02", "R$ 2.300", "Luca", "Sem excl.", "Externo", "Comercial", "C.A", "-"], ["Spazio Vintage, 101", "R$ 4.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Gren Tower, 102", "R$ 2.700", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Recanto de Camburi, 805 G", "R$ 2.600", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Park Center,  sala", "R$ 1.150", "Luca", "Sem excl.", "Externo", "Comercial", "S.A", "-"], ["Victória Bay, 902", "R$ 5.500", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Verano, 702 A", "R$ 3.300", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Europa Towers, 204", "R$ 4.950", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Santa Ines Res. Clube, 605 T3", "R$ 2.200", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"]], "dez": [["Charles Bitran, 803", "R$ 3.200", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"], ["Spazio Vila das Conchas, 903 T3", "R$ 1.650", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Liberty 205, 506 A", "R$ 3.000", "Roger", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Aquarius, 602", "R$ 5.500", "Luca", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Serra Leoa, 303", "R$ 4.000", "Luca", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Silveira, 102", "R$ 2.700", "Luca", "Exclusivo", "Externo", "Residencial", "C.A", "-"], ["Blue Tower, 303", "R$ 3.350", "Luca", "Sem excl.", "Externo", "Residencial", "C.A", "-"]]}, "dbLoc": {"jan": [["Columbia 403", "R$ 1.100", "Beatriz", "60%", "10%", "Fiança", "Relocação", "Residencial"], ["Columbia 409", "R$ 1.050", "Beatriz", "60%", "10%", "Fiança", "Relocação", "Residencial"], ["Bugatti 703", "R$ 2.500", "Beatriz", "50%", "10%", "Fiador", "Nova", "Residencial"], ["Bella Vita 1108", "R$ 1.300", "Beatriz", "50%", "10%", "Fiança", "Relocação", "Residencial"], ["Columbia 410", "R$ 1.050", "Beatriz", "60%", "10%", "Fiança", "Relocação", "Residencial"], ["Bella Vita 1107", "R$ 1.300", "Beatriz", "50%", "10%", "Fiança", "Relocação", "Residencial"]], "fev": [["Tropical Center, Sala 103", "R$ 1.400", "Beatriz", "50%", "10%", "Fiança", "Nova", "Comercial"], ["Spazio Vila das Conchas, 903", "R$ 1.400", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Spazio Vila das Conchas, 305", "R$ 1.300", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Columbia, 104", "R$ 1.200", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Red Tower, 906", "R$ 2.500", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Cecília Nitz, apt. 308", "R$ 1.350", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Pacífico Residencial Clube, 405", "R$ 1.500", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Columbia, 412", "R$ 1.200", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"]], "mar": [["Royal Light, 1206", "R$ 3.000", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Columbia, 205", "R$ 1.300", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Ed. Coutinho, 203", "R$ 2.600", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Cote D'Azur, 1504", "R$ 4.000", "Beatriz", "50%", "10%", "Fiador", "Nova", "Residencial"], ["Jardim Camburi, 01", "R$ 2.500", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Vista do Vale, apto. 305", "R$ 1.600", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Ed. Coutinho, 202", "R$ 2.000", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Mata da Praia, 302", "R$ 3.500", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"]], "abr": [["Royal Beach, 1603", "R$ 6.000", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Grand Canal, 505", "R$ 5.500", "Beatriz", "100%", "0%", "sem adm", "Nova", "Residencial"], ["Ed. Ilha de Santorini Residence, 1004", "R$ 3.800", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Ed Fazenda Da Praia, 201", "R$ 5.000", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Res. Malibu, 1402", "R$ 3.600", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"]], "mai": [["Cond. Privilege, 603", "R$ 4.000", "Beatriz", "50%", "10%", "Fiança", "Relocação", "Residencial"], ["Ed. Red Tower, 406", "R$ 2.100", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"]], "jun": [["Bella Vita, 1106", "R$ 1.300", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Vista do Vale, 402", "R$ 1.350", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Verano, 105", "R$ 1.900", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Terreno Rodosol", "R$ 7.000", "Beatriz", "60%", "10%", "Caução", "Nova", "Comercial"], ["Monte Carlo, 303", "R$ 6.500", "Sem assistente", "0%", "7%", "Sem garantia", "Relocação", "Residencial"], ["Morales Bussines, 1006", "R$ 1.200", "Beatriz", "60%", "5%", "Sem garantia", "Nova", "Residencial"]], "jul": [["Mar de San Vicenzo, 402", "R$ 2.500", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Bella Vita, 704", "R$ 1.300", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Bella Vita, 1007", "R$ 1.400", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Delta, Loja 05", "R$ 6.785,55", "Sem assistente", "0%", "5%", "Sem garantia", "Nova", "Comercial"], ["Azurra, Sala 205 e 206", "R$ 2.888,98", "Sem assistente", "0%", "7%", "Sem garantia", "Nova", "Comercial"], ["Azurra, Sala 202", "R$ 1.779,60", "Sem assistente", "0%", "7%", "Sem garantia", "Nova", "Comercial"], ["Azurra, Sala 201", "R$ 1.134,95", "Sem assistente", "0%", "7%", "Sem garantia", "Nova", "Comercial"], ["Inajá 823B", "R$ 7.000", "Sem assistente", "0%", "7%", "Sem garantia", "Nova", "Comercial"], ["Inajá 823A", "R$ 7.000", "Sem assistente", "0%", "7%", "Sem garantia", "Nova", "Comercial"], ["Verano, 507", "R$ 2.000", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"]], "ago": [["Bella Vita, 1001", "R$ 1.400", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Ocean Ville, 932", "R$ 3.000", "Beatriz", "60%", "10%", "Caução", "Nova", "Comercial"], ["Vista do Vale, 804 B", "R$ 1.500", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Red Tower, 705", "R$ 2.600", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Recanto de Camburi, 1003 H", "R$ 2.600", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Coutinho, 303", "R$ 2.100", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"]], "set": [["Iaponã, 503", "R$ 4.200", "Beatriz", "100%", "0%", "sem adm", "Nova", "Residencial"], ["Alvorada, 302B", "R$ 1.500", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Columbia, 304", "R$ 1.000", "Beatriz", "60%", "10%", "Fiança", "Relocação", "Residencial"], ["Ed. Coutinho,101", "R$ 2.000", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Res. Costa Bella, 1103", "R$ 1.600", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"]], "out": [["Verano, 1006 Torre A", "R$ 2.500", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Villa Flora, 2102", "R$ 3.700", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Kitnet Nazareth", "R$ 950", "Beatriz", "60%", "10%", "Fiança", "Relocação", "Residencial"], ["Saint Patrick, 302", "R$ 9.500", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Viver Horto da Serra, 505", "R$ 1.550", "Beatriz", "60%", "10%", "Fiança", "Relocação", "Residencial"], ["Liberty, 902", "R$ 3.700", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Liberty, 906", "R$ 3.200", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Bella Vita, 610", "R$ 1.500", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Columbia, apt. 308", "R$ 1.200", "Beatriz", "60%", "10%", "Fiança", "Relocação", "Residencial"]], "nov": [["Meliá, 902", "R$ 3.200", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Columbia, 409", "R$ 1.200", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Kitnet Maruípe", "R$ 1.400", "Beatriz", "100%", "0%", "sem adm", "Nova", "Residencial"], ["Ed Jasmini, 1006", "R$ 1.550", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Liberty, 602 A", "R$ 3.200", "Beatriz", "40%", "10%", "Fiança", "Nova", "Residencial"], ["Recanto de Camburi, 805 G", "R$ 2.600", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"]], "dez": [["Victoria Bay, apt. 1802", "R$ 5.500", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Costa Blanca, 301", "R$ 3.700", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Liberty, 1005", "R$ 2.900", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Praia Azul, 904 A", "R$ 3.650", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Columbia, 311", "R$ 1.200", "Beatriz", "50%", "10%", "Fiança", "Nova", "Residencial"], ["Ed. Imperial, 903", "R$ 4.500", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Green Tower, 102", "R$ 2.700", "Beatriz", "60%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Silveira, 102", "R$ 2.700", "Beatriz", "50%", "10%", "Caução", "Nova", "Residencial"], ["Ed. Bella Vita, 805", "R$ 1.500", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"], ["Ed. Luiz Scaramussa, 401", "R$ 7.000", "Sem assistente", "60%", "10%", "Caução", "Nova", "Residencial"], ["Spazio Vila das Conchas, 903 T3", "R$ 1.500", "Beatriz", "60%", "10%", "Fiança", "Nova", "Residencial"]]}, "caps": {"jan": [{"n": "Ilha de Okinawa, 1304", "v": 2700, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Villa Flora, Loja 05", "v": 3200, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "Cecilia Nitz, 308 B", "v": 1400, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Red Tower, 906", "v": 2500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Costa D'Oro, 202", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Ilha de Okinawa, 1314", "v": 2800, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}], "fev": [{"n": "Nautilus, 302", "v": 3500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Coutinho, 202", "v": 2000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Bugatti, 703", "v": 2500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Royal Light, 1206", "v": 3200, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Pacifico Res. Club, 405 B", "v": 1500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Spazio Vila das Conchas, 305 T3", "v": 1300, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Novita, 1204", "v": 5300, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Mar I Luz, Loja 01", "v": 3800, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}], "mar": [{"n": "Achiles Magioni, 1004", "v": 5500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Centro Empresarial Moxuara, Sala 719 T3", "v": 900, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Ilha das Antilhas, 1201", "v": 3300, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Casa Bela Aurora", "v": 1500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Grand Canal, 505", "v": 5500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Vista do Vale, 305 E", "v": 1690, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Cote D'Azur, 1504 Nice", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Vitória Office Tower, 311", "v": 2200, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "Las Palmas, 0", "v": 2800, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}], "abr": [{"n": "Malibu, 1402", "v": 3600, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Alberico Nicoletti, 301", "v": 6500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Praia Bonita, 503", "v": 3100, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Vista do Vale, 402 B", "v": 1600, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Vista do Vale, 304 B", "v": 1600, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}], "mai": [{"n": "Verano, 105 A", "v": 1900, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Comercial Villaggio, 1507", "v": 1000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Red Tower, 206", "v": 2800, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Carapina B3, 203 B8", "v": 1500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}], "jun": [{"n": "Cabernet, 601", "v": 7000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Iaponã, 503", "v": 4500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Mar de San Vicenzo, 402", "v": 2700, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Morales Bisiness, 1007", "v": 1300, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Vera Cruz, 1706B", "v": 2500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Spazio Vintage, 804", "v": 2500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}], "jul": [{"n": "Conjuntos de Lojas Gil Veloso", "v": 4900, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Liberty 205, 902 B", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Recanto de Camburi, 1003 H", "v": 2600, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Ocean Ville, 932", "v": 3100, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "Vista do Vale, 804 B", "v": 1500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Verano, 507 A", "v": 2000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Bachour, 1302", "v": 2700, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Jardim, 1004", "v": 2300, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}], "ago": [{"n": "Bento Ferreira, Loja", "v": 3000, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Galpão 1000m² Bahamares", "v": 15000, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Salão Ilha de Santa Maria, 01", "v": 3300, "excl": "Exclusivo", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Vinã Del Mar, 1102", "v": 5500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Saint Patrick, 302", "v": 10000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Villa Flora,  2102", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Loja Ilha de Santa Maria, 02", "v": 1500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Rabello, 302 B", "v": 1500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Coutinho, 101", "v": 2000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Model Glória, Loja 01", "v": 1100, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Loja Ilha de Santa Maria, 03", "v": 4500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}], "set": [{"n": "Carlos Berger, 01", "v": 3500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "loja Itapuã, 01", "v": 5500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Liberty 205, 505 A", "v": 3000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Darcy Monteiro, 1703", "v": 1700, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Verano, 1006 A", "v": 2500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Costa Bella, 1103 A", "v": 1600, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Manhattan, 203", "v": 4000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "American Towers, 803 Torre 2", "v": 4800, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Casa Praia da Costa, loja 01", "v": 6800, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Casa Praia da Costa, loja 02", "v": 6000, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}], "out": [{"n": "Royal Center, Sala 17", "v": 1300, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Liberty 205, 1005 A", "v": 3000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Liberty 205, 906 B", "v": 3200, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Liberty 205, 602 A", "v": 3500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "kitnet Maruipe, 101", "v": 1500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Imperial, 903", "v": 4800, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Praia Azul, 904 B", "v": 3650, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "kitnet Maruipe, 301", "v": 1400, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Melia, 902", "v": 3500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Victória Bay, 1802", "v": 6000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Centro Empresarial Moxuara", "v": 990, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "Comercial Gaivotas", "v": 4850, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "Infinity, 1109", "v": 3500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Kitnet Maruipe, 104", "v": 1650, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "S.A"}, {"n": "Serpa, 304", "v": 4000, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "São Conrado, 302", "v": 2400, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Casa Comercial Enseada", "v": 9500, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "Belize, 202", "v": 3300, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Monte Moria, 702", "v": 4500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Veneza, 401", "v": 2300, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}], "nov": [{"n": "Costa Blanca, 301 A", "v": 3700, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Casa Comercial Gaivotas, loja 02", "v": 2300, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "C.A"}, {"n": "Spazio Vintage, 101", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Gren Tower, 102", "v": 2700, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Recanto de Camburi, 805 G", "v": 2600, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Park Center,  sala", "v": 1150, "excl": "Sem excl.", "orig": "Externo", "dest": "Comercial", "cont": "S.A"}, {"n": "Victória Bay, 902", "v": 5500, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Verano, 702 A", "v": 3300, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Europa Towers, 204", "v": 4950, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Santa Ines Res. Clube, 605 T3", "v": 2200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}], "dez": [{"n": "Charles Bitran, 803", "v": 3200, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Spazio Vila das Conchas, 903 T3", "v": 1650, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Liberty 205, 506 A", "v": 3000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Aquarius, 602", "v": 5500, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Serra Leoa, 303", "v": 4000, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Silveira, 102", "v": 2700, "excl": "Exclusivo", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}, {"n": "Blue Tower, 303", "v": 3350, "excl": "Sem excl.", "orig": "Externo", "dest": "Residencial", "cont": "C.A"}]}, "capPorMes": {"jan": {"Marcos": ["Ilha de Okinawa, 1304", "Costa D'Oro, 202", "Ilha de Okinawa, 1314"], "Roger": ["Villa Flora, Loja 05", "Cecilia Nitz, 308 B", "Red Tower, 906"]}, "fev": {"Roger": ["Nautilus, 302", "Coutinho, 202", "Royal Light, 1206", "Pacifico Res. Club, 405 B", "Novita, 1204", "Mar I Luz, Loja 01"], "Marcos": ["Bugatti, 703", "Spazio Vila das Conchas, 305 T3"]}, "mar": {"Marcos": ["Achiles Magioni, 1004", "Centro Empresarial Moxuara, Sala 719 T3", "Ilha das Antilhas, 1201", "Casa Bela Aurora", "Grand Canal, 505", "Vista do Vale, 305 E", "Las Palmas, 0"], "Roger": ["Cote D'Azur, 1504 Nice", "Vitória Office Tower, 311"]}, "abr": {"Marcos": ["Malibu, 1402", "Alberico Nicoletti, 301", "Praia Bonita, 503", "Vista do Vale, 402 B", "Vista do Vale, 304 B"]}, "mai": {"Roger": ["Verano, 105 A", "Red Tower, 206", "Carapina B3, 203 B8"], "Marcos": ["Comercial Villaggio, 1507"]}, "jun": {"Roger": ["Cabernet, 601", "Iaponã, 503", "Mar de San Vicenzo, 402", "Morales Bisiness, 1007", "Spazio Vintage, 804"], "Marcos": ["Vera Cruz, 1706B"]}, "jul": {"Roger": ["Conjuntos de Lojas Gil Veloso", "Liberty 205, 902 B", "Recanto de Camburi, 1003 H", "Ocean Ville, 932", "Vista do Vale, 804 B", "Verano, 507 A", "Bachour, 1302", "Jardim, 1004"]}, "ago": {"Luca": ["Bento Ferreira, Loja", "Salão Ilha de Santa Maria, 01", "Loja Ilha de Santa Maria, 02", "Model Glória, Loja 01", "Loja Ilha de Santa Maria, 03"], "Roger": ["Galpão 1000m² Bahamares", "Vinã Del Mar, 1102", "Saint Patrick, 302", "Villa Flora,  2102", "Rabello, 302 B", "Coutinho, 101"]}, "set": {"Luca": ["Carlos Berger, 01", "loja Itapuã, 01", "Manhattan, 203", "American Towers, 803 Torre 2", "Casa Praia da Costa, loja 01", "Casa Praia da Costa, loja 02"], "Roger": ["Liberty 205, 505 A", "Darcy Monteiro, 1703", "Verano, 1006 A", "Costa Bella, 1103 A"]}, "out": {"Luca": ["Royal Center, Sala 17", "kitnet Maruipe, 101", "Praia Azul, 904 B", "kitnet Maruipe, 301", "Centro Empresarial Moxuara", "Comercial Gaivotas", "Kitnet Maruipe, 104", "São Conrado, 302", "Casa Comercial Enseada", "Belize, 202", "Veneza, 401"], "Roger": ["Liberty 205, 1005 A", "Liberty 205, 906 B", "Liberty 205, 602 A", "Imperial, 903", "Melia, 902", "Victória Bay, 1802", "Infinity, 1109", "Serpa, 304", "Monte Moria, 702"]}, "nov": {"Luca": ["Costa Blanca, 301 A", "Casa Comercial Gaivotas, loja 02", "Gren Tower, 102", "Park Center,  sala", "Victória Bay, 902", "Verano, 702 A", "Europa Towers, 204", "Santa Ines Res. Clube, 605 T3"], "Roger": ["Spazio Vintage, 101", "Recanto de Camburi, 805 G"]}, "dez": {"Luca": ["Charles Bitran, 803", "Aquarius, 602", "Serra Leoa, 303", "Silveira, 102", "Blue Tower, 303"], "Roger": ["Spazio Vila das Conchas, 903 T3", "Liberty 205, 506 A"]}}, "captadores": ["Roger", "Luca", "Marcos"], "assistentesLoc": ["Beatriz"], "metaMensal": 20000, "hasLoc": true, "carteira": {"abr": {"ativos": 109, "entraram": 0, "sairam": 0, "variacao": 0}, "mai": {"ativos": 108, "entraram": 2, "sairam": 3, "variacao": -1}, "jun": {"ativos": 111, "entraram": 6, "sairam": 3, "variacao": 3}, "jul": {"ativos": 109, "entraram": 4, "sairam": 6, "variacao": -2}, "ago": {"ativos": 112, "entraram": 6, "sairam": 3, "variacao": 3}, "set": {"ativos": 114, "entraram": 4, "sairam": 2, "variacao": 2}, "out": {"ativos": 120, "entraram": 9, "sairam": 3, "variacao": 6}, "nov": {"ativos": 125, "entraram": 6, "sairam": 1, "variacao": 5}, "dez": {"ativos": 128, "entraram": 12, "sairam": 9, "variacao": 3}}}};
+let YEARS = DEFAULT_YEARS;
+
+async function loadDashboardData() {
+  try {
+    const stored = await window.storage.get('dashboard-data', false);
+    if (stored && stored.value) {
+      const parsed = JSON.parse(stored.value);
+      if (parsed && parsed.v && parsed.v >= DASHBOARD_VERSION && parsed.years) {
+        YEARS = parsed.years;
+        return;
+      }
+    }
+  } catch (e) {
+    // sem dado salvo ainda ou erro de leitura — segue com o padrão
+  }
+  YEARS = DEFAULT_YEARS;
+  try {
+    await window.storage.set('dashboard-data', JSON.stringify({ v: DASHBOARD_VERSION, years: DEFAULT_YEARS }), false);
+  } catch (e) {
+    // se salvar falhar, o dashboard ainda funciona normalmente nesta sessão
+  }
+}
+let currentYear = '2026';
+let currentMode = 'year';
+
+const CAPTADOR_CLASSES = ['p-blue','p-green','p-purple','p-amber','p-teal'];
+const CAPTADOR_HEX = { 'p-blue':['#4f8ef7','#7eb3ff'], 'p-green':['#22c55e','#4ade80'], 'p-purple':['#a855f7','#c084fc'], 'p-amber':['#f59e0b','#fbbf24'], 'p-teal':['#2dd4bf','#5eead4'] };
+const ASSIST_CLASSES = ['p-green','p-blue','p-purple'];
+
+function captadorClass(year, name){
+  const idx = YEARS[year].captadores.indexOf(name);
+  return CAPTADOR_CLASSES[idx>=0 ? idx % CAPTADOR_CLASSES.length : CAPTADOR_CLASSES.length-1];
+}
+function assistenteClass(year, name){
+  if(name==='Sem assistente' || !name) return 'p-gray';
+  const idx = YEARS[year].assistentesLoc.indexOf(name);
+  return ASSIST_CLASSES[idx>=0 ? idx % ASSIST_CLASSES.length : 0];
+}
+
+const EXCL_CLS = {'Exclusivo':'p-purple','Sem excl.':'p-gray'};
+const ORIG_CLS = {'Externo':'p-blue','Interno':'p-gray'};
+const DEST_CLS = {'Residencial':'p-green','Comercial':'p-teal'};
+const CONT_CLS = {'CA':'p-blue','SA':'p-gray'};
+const TIPO_CLS = {'Nova':'p-green','Relocação':'p-blue'};
+const GAR_CLS = {'Caução':'p-amber','S.F. Porto':'p-teal','S.F. Tokio':'p-blue','Sem garantia':'p-gray'};
+
+function fmtR$(v){ return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
+function fmtR$2(v){ return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function parseValor(s){ return parseFloat(String(s).replace('R$ ','').replace(/\./g,'').replace(',','.')); }
+function pct(part, total){ return total>0 ? Math.round((part/total)*100) : 0; }
+
+function computeStats(year, mesesOverride){
+  const Y = YEARS[year];
+  const mesesUsados = mesesOverride || Y.meses;
+  let totalCap=0, totalLoc=0, vglTotal=0, vglNovas=0, vglReloc=0;
+  const porCaptador = {}; Y.captadores.forEach(c=>porCaptador[c]=0);
+  let excl=0, semExcl=0, ext=0, intr=0, ca=0, sa=0, residCap=0, comerCap=0, sdrCount=0;
+  let novas=0, reloc=0, residLoc=0, comerLoc=0;
+  const garantia = {};
+  const porAssistente = {}; Y.assistentesLoc.forEach(a=>porAssistente[a]=0);
+  let assistenteOutros = 0;
+  const porMes = {};
+
+  mesesUsados.forEach(m=>{
+    const caps = Y.dbCap[m]||[];
+    const locs = Y.dbLoc[m]||[];
+    totalCap += caps.length; totalLoc += locs.length;
+    let mVgl=0, mVglNovas=0, mVglReloc=0, mNovas=0, mReloc=0, mSdr=0;
+    const mCapt = {};
+    caps.forEach(r=>{
+      const captador=r[2], exclusividade=r[3], origem=r[4], destinacao=r[5], contrato=r[6], sdr=r[7];
+      porCaptador[captador] = (porCaptador[captador]||0)+1;
+      mCapt[captador] = (mCapt[captador]||0)+1;
+      if(exclusividade==='Exclusivo') excl++; else semExcl++;
+      if(origem==='Externo') ext++; else intr++;
+      if(contrato==='CA') ca++; else sa++;
+      if(destinacao==='Residencial') residCap++; else comerCap++;
+      if(sdr && sdr!=='-'){ sdrCount++; mSdr++; }
+    });
+    locs.forEach(r=>{
+      const assistente=r[2], gar=r[5], tipo=r[6], destinacao=r[7];
+      const v = parseValor(r[1]);
+      vglTotal += v; mVgl += v;
+      if(tipo==='Nova'){ novas++; mNovas++; vglNovas+=v; mVglNovas+=v; } else { reloc++; mReloc++; vglReloc+=v; mVglReloc+=v; }
+      if(destinacao==='Residencial') residLoc++; else comerLoc++;
+      garantia[gar] = (garantia[gar]||0)+1;
+      if(Y.assistentesLoc.indexOf(assistente)>=0) porAssistente[assistente]=(porAssistente[assistente]||0)+1;
+      else assistenteOutros++;
+    });
+    porMes[m] = {
+      cap: caps.length, loc: locs.length, vgl: mVgl, vglNovas: mVglNovas, vglReloc: mVglReloc,
+      ticket: locs.length ? Math.round(mVgl/locs.length) : 0,
+      novas: mNovas, reloc: mReloc, porCaptador: mCapt, sdr: mSdr
+    };
+  });
+
+  return {
+    totalCap, totalLoc, vglTotal, vglNovas, vglReloc, ticketMedio: totalLoc ? Math.round(vglTotal/totalLoc) : 0,
+    porCaptador, excl, semExcl, ext, intr, ca, sa, residCap, comerCap, sdrCount,
+    novas, reloc, residLoc, comerLoc, garantia, porAssistente, assistenteOutros, porMes
+  };
+}
+</script>
+<script>
+function renderYearToggle(){
+  const el = document.getElementById('yearToggle');
+  const anos = Object.keys(YEARS).sort((a,b)=>b-a);
+  el.innerHTML = anos.map(y => `<button class="year-btn ${currentMode==='year'&&y===currentYear?'active':''}" onclick="setYear('${y}')">${y}</button>`).join('') +
+    `<button class="year-btn ${currentMode==='compare'?'active':''}" onclick="setCompareMode()">⇄ Comparativo</button>`;
+}
+
+function setYear(year){
+  currentMode = 'year';
+  currentYear = year;
+  renderAll();
+}
+
+function setCompareMode(){
+  currentMode = 'compare';
+  renderAll();
+}
+
+function renderPendingBanner(){
+  const Y = YEARS[currentYear];
+  const el = document.getElementById('pendingBanner');
+  if(!Y.hasLoc){
+    el.innerHTML = `<div class="pending-banner">⏳ Ainda não recebemos os dados de <b>locação de ${Y.label}</b>. Os indicadores de VGL, ticket médio e garantias deste ano aparecerão assim que a planilha for importada — por enquanto, os dados de captação já estão 100% completos.</div>`;
+  } else {
+    el.innerHTML = '';
+  }
+  document.getElementById('periodoLabel').textContent = Y.hasLoc
+    ? `Captação e Locação · ${Y.mesesLabel[Y.meses[0]]} a ${Y.mesesLabel[Y.meses[Y.meses.length-1]]} de ${Y.label}`
+    : `Captação · ${Y.mesesLabel[Y.meses[0]]} a ${Y.mesesLabel[Y.meses[Y.meses.length-1]]} de ${Y.label} (locação pendente)`;
+}
+
+function renderKPIs(stats){
+  const Y = YEARS[currentYear];
+  const el = document.getElementById('kpiRow');
+  const metaAnual = Y.metaMensal * Y.meses.length;
+  const diff = stats.vglTotal - metaAnual;
+  const acima = diff >= 0;
+
+  let vglChip;
+  if(Y.hasLoc){
+    vglChip = `
+    <div class="chip" style="border:0.5px solid rgba(${acima?'34,197,94':'239,68,68'},0.3);cursor:pointer" onclick="openVglModal(null)">
+      <div class="chip-lbl">VGL Acumulado <span style="font-size:9px;color:#6b7280">(clique p/ detalhar)</span></div>
+      <div class="chip-val" style="color:#f59e0b;font-size:19px">${fmtR$2(stats.vglTotal)}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
+        <span style="font-size:13px;font-weight:700;color:${acima?'#4ade80':'#f87171'}">${acima?'&#9650;':'&#9660;'} ${fmtR$2(Math.abs(diff))}</span>
+        <span style="font-size:11px;color:#6b7280">${acima?'acima':'abaixo'} da meta</span>
+      </div>
+      <div style="font-size:10px;color:#4b5563;margin-top:3px">Meta: ${fmtR$2(metaAnual)} (${Y.meses.length} x ${fmtR$(Y.metaMensal)})</div>
+    </div>`;
+  } else {
+    vglChip = `
+    <div class="chip" style="border:0.5px solid rgba(107,114,128,0.3)">
+      <div class="chip-lbl">VGL Acumulado</div>
+      <div class="chip-val pending-value" style="font-size:19px">Aguardando dados</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:5px">Locação de ${Y.label} ainda não importada</div>
+    </div>`;
+  }
+
+  const novasPct = pct(stats.novas, stats.novas+stats.reloc);
+  const relocPct = 100 - novasPct;
+  const sdrPct = pct(stats.sdrCount, stats.totalCap);
+
+  el.innerHTML = `
+    <div class="chip"><div class="chip-lbl">Captações</div><div class="chip-val" style="color:#4f8ef7">${stats.totalCap}</div><div class="chip-sub">total ${Y.hasLoc?'anual':'no período'}</div></div>
+    <div class="chip"><div class="chip-lbl">Locações</div><div class="chip-val" style="color:${Y.hasLoc?'#22c55e':'#4b5563'}">${Y.hasLoc?stats.totalLoc:'—'}</div><div class="chip-sub">${Y.hasLoc?'total anual':'aguardando dados'}</div></div>
+    ${vglChip}
+    <div class="chip"><div class="chip-lbl">Ticket Médio</div><div class="chip-val" style="color:${Y.hasLoc?'#22c55e':'#4b5563'};font-size:22px">${Y.hasLoc?fmtR$(stats.ticketMedio):'—'}</div><div class="chip-sub">${Y.hasLoc?'media geral':'aguardando dados'}</div></div>
+    <div class="chip"><div class="chip-lbl">Novas / Reloc.</div><div class="chip-val" style="color:${Y.hasLoc?'#4ade80':'#4b5563'};font-size:22px">${Y.hasLoc?(stats.novas+' / '+stats.reloc):'— / —'}</div><div class="chip-sub">${Y.hasLoc?(novasPct+'% novas · '+relocPct+'% relocações'):'aguardando dados'}</div></div>
+    <div class="chip" style="border:0.5px solid rgba(245,158,11,0.3)"><div class="chip-lbl">Captações via SDR</div><div class="chip-val" style="color:#fbbf24">${stats.sdrCount}</div><div class="chip-sub">${sdrPct}% do total</div></div>
+  `;
+}
+
+function renderDestaques(stats){
+  const Y = YEARS[currentYear];
+  const el = document.getElementById('destaqueRow');
+
+  let topCapNome='-', topCapQtd=0;
+  Object.entries(stats.porCaptador).forEach(([n,q])=>{ if(q>topCapQtd){topCapQtd=q; topCapNome=n;} });
+  const topCapPct = pct(topCapQtd, stats.totalCap);
+
+  let assistBlock;
+  if(Y.hasLoc){
+    let topAssistNome='-', topAssistQtd=0;
+    Object.entries(stats.porAssistente).forEach(([n,q])=>{ if(q>topAssistQtd){topAssistQtd=q; topAssistNome=n;} });
+    if(stats.assistenteOutros > topAssistQtd){ topAssistQtd = stats.assistenteOutros; topAssistNome = 'Sem assistente'; }
+    const topAssistPct = pct(topAssistQtd, stats.totalLoc);
+    assistBlock = `<div class="dest-nome" style="color:#22c55e">${topAssistNome}</div><div class="dest-sub">${topAssistQtd} locações &middot; ${topAssistPct}% do total</div>`;
+  } else {
+    assistBlock = `<div class="dest-nome pending-value">—</div><div class="dest-sub">aguardando dados de locação</div>`;
+  }
+
+  let vglBlock;
+  if(Y.hasLoc){
+    let bestMes=null, bestVgl=-1;
+    Y.meses.forEach(m=>{ if(stats.porMes[m].vgl>bestVgl){ bestVgl=stats.porMes[m].vgl; bestMes=m; } });
+    const bt = bestMes ? stats.porMes[bestMes].ticket : 0;
+    vglBlock = `<div class="dest-nome" style="color:#f59e0b">${bestMes?Y.mesesLabel[bestMes]:'-'}</div><div class="dest-sub">${fmtR$(bestVgl<0?0:bestVgl)} &middot; ticket ${fmtR$(bt)}</div>`;
+  } else {
+    vglBlock = `<div class="dest-nome pending-value">—</div><div class="dest-sub">aguardando dados de locação</div>`;
+  }
+
+  let bestCapMes=null, bestCapQtd=-1;
+  Y.meses.forEach(m=>{ if(stats.porMes[m].cap>bestCapQtd){ bestCapQtd=stats.porMes[m].cap; bestCapMes=m; } });
+
+  el.innerHTML = `
+    <div class="destaque" style="background:rgba(79,142,247,0.08);border:0.5px solid rgba(79,142,247,0.2)">
+      <div class="dest-lbl" style="color:#7eb3ff">🏆 Top Captador</div>
+      <div class="dest-nome" style="color:#4f8ef7">${topCapNome}</div>
+      <div class="dest-sub">${topCapQtd} captações &middot; ${topCapPct}% do total</div>
+    </div>
+    <div class="destaque" style="background:rgba(34,197,94,0.08);border:0.5px solid rgba(34,197,94,0.2)">
+      <div class="dest-lbl" style="color:#4ade80">🏆 Top Assistente Locação</div>
+      ${assistBlock}
+    </div>
+    <div class="destaque" style="background:rgba(245,158,11,0.08);border:0.5px solid rgba(245,158,11,0.2)">
+      <div class="dest-lbl" style="color:#fbbf24">💰 Melhor VGL</div>
+      ${vglBlock}
+    </div>
+    <div class="destaque" style="background:rgba(168,85,247,0.08);border:0.5px solid rgba(168,85,247,0.2)">
+      <div class="dest-lbl" style="color:#c084fc">📈 Mais Captações</div>
+      <div class="dest-nome" style="color:#a855f7">${bestCapMes?Y.mesesLabel[bestCapMes]:'-'}</div>
+      <div class="dest-sub">${bestCapQtd<0?0:bestCapQtd} captações no mês</div>
+    </div>
+  `;
+}
+
+function renderCapCards(stats){
+  const Y = YEARS[currentYear];
+  const el = document.getElementById('capCardsRow');
+  el.innerHTML = Y.captadores.map(nome=>{
+    const cls = captadorClass(currentYear, nome);
+    const [main] = CAPTADOR_HEX[cls];
+    const rgb = {'p-blue':'79,142,247','p-green':'34,197,94','p-purple':'168,85,247','p-amber':'245,158,11','p-teal':'20,184,166'}[cls];
+    const qtd = stats.porCaptador[nome]||0;
+    const p = pct(qtd, stats.totalCap);
+    return `<div class="cap-card" style="background:rgba(${rgb},0.08);border:0.5px solid rgba(${rgb},0.2)" onclick="openCapModal('${nome}')">
+      <div class="cap-name" style="color:${main}">${nome}</div>
+      <div class="cap-val" style="color:${main}">${qtd}</div>
+      <div class="cap-sub">${p}% do total</div>
+    </div>`;
+  }).join('');
+}
+
+function barRow(lbl, num, total, color){
+  const p = pct(num, total);
+  return `<div class="bar-row"><div class="bar-lbl">${lbl}</div><div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${color}"></div></div><div class="bar-num">${num}</div></div>`;
+}
+
+function renderBars(stats){
+  const Y = YEARS[currentYear];
+
+  document.getElementById('barExclusividade').innerHTML =
+    barRow('Exclusivas', stats.excl, stats.totalCap, 'linear-gradient(90deg,#4f8ef7,#7eb3ff)') +
+    barRow('Sem exclusividade', stats.semExcl, stats.totalCap, '#3b4f7a');
+
+  document.getElementById('barOrigem').innerHTML =
+    barRow('Externa', stats.ext, stats.totalCap, 'linear-gradient(90deg,#4f8ef7,#7eb3ff)') +
+    barRow('Interna', stats.intr, stats.totalCap, '#7eb3ff');
+
+  document.getElementById('barContrato').innerHTML =
+    barRow('C.A', stats.ca, stats.totalCap, 'linear-gradient(90deg,#4f8ef7,#7eb3ff)') +
+    barRow('S.A', stats.sa, stats.totalCap, '#3b4f7a');
+
+  document.getElementById('barDestinacaoCap').innerHTML =
+    barRow('Residencial', stats.residCap, stats.totalCap, 'linear-gradient(90deg,#22c55e,#4ade80)') +
+    barRow('Comercial', stats.comerCap, stats.totalCap, '#2dd4bf');
+
+  if(!Y.hasLoc){
+    const msg = '<div class="pending-inline">Aguardando dados de locação</div>';
+    document.getElementById('barTipoLoc').innerHTML = msg;
+    document.getElementById('barDestinacaoLoc').innerHTML = '';
+    document.getElementById('chipGarantia').innerHTML = '';
+    document.getElementById('barGarantia').innerHTML = msg;
+    return;
+  }
+
+  document.getElementById('barTipoLoc').innerHTML =
+    barRow('Novas', stats.novas, stats.totalLoc, 'linear-gradient(90deg,#22c55e,#4ade80)') +
+    barRow('Relocações', stats.reloc, stats.totalLoc, '#7eb3ff');
+
+  document.getElementById('barDestinacaoLoc').innerHTML =
+    barRow('Residencial', stats.residLoc, stats.totalLoc, 'linear-gradient(90deg,#22c55e,#4ade80)') +
+    barRow('Comercial', stats.comerLoc, stats.totalLoc, '#2dd4bf');
+
+  const garColors = {'Caução':'#f59e0b','S.F. Porto':'#2dd4bf','S.F. Tokio':'#7eb3ff'};
+  const garEntries = Object.entries(stats.garantia).sort((a,b)=>b[1]-a[1]);
+  const topGar = garEntries.slice(0,3);
+  document.getElementById('chipGarantia').innerHTML = topGar.map(([g,q])=>{
+    const c = garColors[g] || '#9ca3af';
+    return `<div class="chip" style="flex:1;text-align:center"><div class="chip-lbl">${g}</div><div class="chip-val" style="color:${c};font-size:26px">${q}</div><div class="chip-sub">${pct(q,stats.totalLoc)}%</div></div>`;
+  }).join('');
+  document.getElementById('barGarantia').innerHTML = garEntries.map(([g,q])=>{
+    const c = garColors[g] || '#6b7280';
+    return barRow(g, q, stats.totalLoc, c);
+  }).join('');
+}
+</script>
+<script>
+function renderTabela(stats){
+  const Y = YEARS[currentYear];
+  const headRow = document.getElementById('tabelaHeadRow');
+  const body = document.getElementById('tabelaBody');
+  document.getElementById('tabelaLbl').textContent = `Resultados Mensais — ${Y.label}`;
+
+  const captCols = Y.captadores;
+  headRow.innerHTML = '<th>Mês</th>' +
+    '<th style="text-align:center">Captações</th><th style="text-align:center">Locações</th>' +
+    '<th style="text-align:right">VGL</th><th style="text-align:right">Ticket Médio</th>' +
+    '<th style="text-align:center">Novas</th><th style="text-align:center">Reloc.</th>' +
+    captCols.map(c=>`<th style="text-align:center">${c}</th>`).join('') +
+    '<th style="text-align:center">SDR</th>';
+
+  let rows = '';
+  let totCap=0, totLoc=0, totVgl=0, totNovas=0, totReloc=0, totSdr=0;
+  const totPorCaptador = {}; captCols.forEach(c=>totPorCaptador[c]=0);
+
+  Y.meses.forEach(m=>{
+    const pm = stats.porMes[m];
+    totCap+=pm.cap; totLoc+=pm.loc; totVgl+=pm.vgl; totNovas+=pm.novas; totReloc+=pm.reloc; totSdr+=pm.sdr;
+    captCols.forEach(c=> totPorCaptador[c] += (pm.porCaptador[c]||0) );
+    rows += `<tr><td>${Y.mesesLabel[m]}</td>` +
+      `<td style="text-align:center"><span class="clickable clickable-cap" onclick="openModal('cap','${m}')">${pm.cap}</span></td>` +
+      `<td style="text-align:center">${Y.hasLoc ? `<span class="clickable clickable-loc" onclick="openModal('loc','${m}')">${pm.loc}</span>` : '<span class="pending-value">0</span>'}</td>` +
+      `<td style="text-align:right;color:#fbbf24">${Y.hasLoc&&pm.loc ? `<span class="clickable" style="color:#fbbf24;background:rgba(245,158,11,0.1)" onclick="openVglModal('${m}')">${fmtR$(pm.vgl)}</span>` : (Y.hasLoc?fmtR$(pm.vgl):'—')}</td>` +
+      `<td style="text-align:right;color:#9ca3af">${Y.hasLoc&&pm.loc?fmtR$(pm.ticket):'—'}</td>` +
+      `<td style="text-align:center">${Y.hasLoc?pm.novas:'—'}</td><td style="text-align:center">${Y.hasLoc?pm.reloc:'—'}</td>` +
+      captCols.map(c=>`<td style="text-align:center;color:${CAPTADOR_HEX[captadorClass(currentYear,c)][0]}">${pm.porCaptador[c]||0}</td>`).join('') +
+      `<td style="text-align:center;color:#fbbf24">${pm.sdr}</td></tr>`;
+  });
+
+  rows += `<tr class="tr-total"><td>TOTAL</td><td style="text-align:center">${totCap}</td><td style="text-align:center">${Y.hasLoc?totLoc:'—'}</td>` +
+    `<td style="text-align:right">${Y.hasLoc&&totLoc ? `<span class="clickable" style="color:#7eb3ff;background:rgba(79,142,247,0.12)" onclick="openVglModal(null)">${fmtR$(totVgl)}</span>` : (Y.hasLoc?fmtR$(totVgl):'—')}</td>` +
+    `<td style="text-align:right">${Y.hasLoc&&totLoc?fmtR$(Math.round(totVgl/totLoc)):'—'}</td>` +
+    `<td style="text-align:center">${Y.hasLoc?totNovas:'—'}</td><td style="text-align:center">${Y.hasLoc?totReloc:'—'}</td>` +
+    captCols.map(c=>`<td style="text-align:center">${totPorCaptador[c]}</td>`).join('') +
+    `<td style="text-align:center">${totSdr}</td></tr>`;
+
+  body.innerHTML = rows;
+}
+
+let chartCL=null, chartVGL=null, chartTicket=null;
+let chartCarteiraAtivos=null, chartCarteiraFluxo=null, chartCompareCarteira=null;
+const tc = '#9ca3af', gc = 'rgba(255,255,255,0.06)';
+const bX = { ticks:{color:tc, font:{size:10}}, grid:{display:false} };
+const bY = { ticks:{color:tc, font:{size:10}}, grid:{color:gc}, beginAtZero:true };
+
+function renderCharts(stats){
+  const Y = YEARS[currentYear];
+  const labels = Y.meses.map(m=>Y.mesesLabel[m].slice(0,3));
+  const capData = Y.meses.map(m=>stats.porMes[m].cap);
+  const locData = Y.meses.map(m=>stats.porMes[m].loc);
+  const vglData = Y.meses.map(m=>stats.porMes[m].vgl);
+  const ticketData = Y.meses.map(m=>stats.porMes[m].ticket);
+  const palette = ['#4f8ef7','#7eb3ff','#22c55e','#f59e0b','#4ade80','#a855f7','#2dd4bf','#f472b6','#fb923c','#38bdf8','#facc15','#e879f9'];
+
+  if(chartCL) chartCL.destroy();
+  if(chartVGL) chartVGL.destroy();
+  if(chartTicket) chartTicket.destroy();
+
+  chartCL = new Chart(document.getElementById('chartCL'), {
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'Captações', data:capData, backgroundColor:'#4f8ef7', borderRadius:4},
+      {label:'Locações', data:locData, backgroundColor:'#22c55e', borderRadius:4}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:tc, font:{size:11}, boxWidth:10}}},
+      scales:{x:bX, y:bY} }
+  });
+
+  chartVGL = new Chart(document.getElementById('chartVGL'), {
+    type:'line',
+    data:{ labels, datasets:[{ label:'VGL', data:vglData, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.1)', pointBackgroundColor:'#f59e0b', pointRadius:4, fill:true, tension:0.3 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{x:bX, y:{...bY, ticks:{...bY.ticks, callback:v=>'R$'+(v/1000).toFixed(0)+'k'}}} }
+  });
+
+  chartTicket = new Chart(document.getElementById('chartTicket'), {
+    type:'bar',
+    data:{ labels, datasets:[{ data:ticketData, backgroundColor:labels.map((_,i)=>palette[i%palette.length]), borderRadius:6 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:tc,font:{size:9}}, grid:{display:false}}, y:{...bY, ticks:{...bY.ticks, callback:v=>'R$'+v.toLocaleString('pt-BR')}}} }
+  });
+}
+
+/* ===================== MODAIS ===================== */
+function openModal(tipo, mes){
+  const Y = YEARS[currentYear];
+  const rows = tipo==='cap' ? (Y.dbCap[mes]||[]) : (Y.dbLoc[mes]||[]);
+  const overlay = document.getElementById('modalOverlay');
+  const headEl = document.getElementById('mHead');
+  const bodyEl = document.getElementById('mBody');
+
+  document.getElementById('mTitulo').textContent = (tipo==='cap' ? 'Captações — ' : 'Locações — ') + Y.mesesLabel[mes] + ' ' + Y.label;
+
+  let headers, pillGetters;
+  if(tipo==='cap'){
+    headers = ['Imóvel','Valor','Captador','Exclusividade','Origem','Destinação','Contrato','SDR'];
+    pillGetters = [null, null,
+      (v)=>`<span class="pill ${captadorClass(currentYear,v)}">${v}</span>`,
+      (v)=>`<span class="pill ${EXCL_CLS[v]||'p-gray'}">${v}</span>`,
+      (v)=>`<span class="pill ${ORIG_CLS[v]||'p-gray'}">${v}</span>`,
+      (v)=>`<span class="pill ${DEST_CLS[v]||'p-gray'}">${v}</span>`,
+      (v)=>`<span class="pill ${CONT_CLS[v]||'p-gray'}">${v}</span>`,
+      (v)=> (v && v!=='-') ? `<span class="pill p-amber">${v}</span>` : `<span style="color:#374151">-</span>`
+    ];
+  } else {
+    headers = ['Imóvel','Valor','Assistente','Taxa Cont.','Taxa Adm.','Garantia','Tipo','Destinação'];
+    pillGetters = [null, null,
+      (v)=>`<span class="pill ${assistenteClass(currentYear,v)}">${v}</span>`,
+      null, null,
+      (v)=>`<span class="pill ${GAR_CLS[v]||'p-gray'}">${v}</span>`,
+      (v)=>`<span class="pill ${TIPO_CLS[v]||'p-gray'}">${v}</span>`,
+      (v)=>`<span class="pill ${DEST_CLS[v]||'p-gray'}">${v}</span>`
+    ];
+  }
+
+  headEl.innerHTML = headers.map(h=>`<th>${h}</th>`).join('');
+  bodyEl.innerHTML = rows.map(r=>{
+    return '<tr>' + r.map((cell,ci)=>{
+      if(ci===1) return `<td><span style="color:#4ade80;font-family:monospace;font-weight:700">${cell}</span></td>`;
+      const g = pillGetters[ci];
+      return `<td>${g ? g(cell) : cell}</td>`;
+    }).join('') + '</tr>';
+  }).join('');
+
+  const vgl = tipo==='loc' ? rows.reduce((s,r)=>s+parseValor(r[1]),0) : 0;
+  const sdrCount = tipo==='cap' ? rows.filter(r=>r[7] && r[7]!=='-').length : 0;
+  document.getElementById('mFooter').innerHTML =
+    `<span class="badge ${tipo==='cap'?'b-blue':'b-green'}">${rows.length} ${tipo==='cap'?'captações':'locações'}</span>` +
+    (tipo==='loc' ? `<span class="badge b-amber">VGL ${fmtR$(vgl)}</span><span class="badge b-teal">Ticket ${fmtR$(rows.length?vgl/rows.length:0)}</span>` : '') +
+    (sdrCount>0 ? `<span class="badge b-amber">${sdrCount} via SDR</span>` : '');
+
+  overlay.classList.add('open');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+function openCapModal(nome){
+  const Y = YEARS[currentYear];
+  const overlay = document.getElementById('capModalOverlay');
+  const cls = captadorClass(currentYear, nome);
+  const [cor] = CAPTADOR_HEX[cls];
+
+  document.getElementById('capTitulo').textContent = nome + ' — ' + Y.label;
+
+  let total=0, vglTotal=0, exclCount=0;
+  const linhas = [];
+  Y.meses.forEach(m=>{
+    (Y.dbCap[m]||[]).forEach(r=>{
+      if(r[2]!==nome) return;
+      total++;
+      const v = parseValor(r[1]);
+      vglTotal += v;
+      if(r[3]==='Exclusivo') exclCount++;
+      linhas.push({mes:m, imovel:r[0], valor:v, excl:r[3], orig:r[4], dest:r[5], cont:r[6]});
+    });
+  });
+
+  document.getElementById('capKpis').innerHTML = `
+    <div class="cap-kpi"><div class="cap-kpi-lbl">Total Captado</div><div class="cap-kpi-val" style="color:${cor}">${total}</div><div class="cap-kpi-sub">imóveis</div></div>
+    <div class="cap-kpi"><div class="cap-kpi-lbl">Valor Total</div><div class="cap-kpi-val" style="color:${cor};font-size:20px">${fmtR$(vglTotal)}</div><div class="cap-kpi-sub">valor médio captado</div></div>
+    <div class="cap-kpi"><div class="cap-kpi-lbl">Exclusividade</div><div class="cap-kpi-val" style="color:${cor};font-size:20px">${pct(exclCount,total)}%</div><div class="cap-kpi-sub">${exclCount} de ${total}</div></div>
+  `;
+
+  document.getElementById('capMensal').innerHTML = Y.meses.map(m=>{
+    const q = (Y.dbCap[m]||[]).filter(r=>r[2]===nome).length;
+    return `<div><div class="mensal-mes">${Y.mesesLabel[m].slice(0,3)}</div><div class="mensal-val" style="color:${q>0?cor:'#374151'}">${q}</div></div>`;
+  }).join('');
+
+  document.getElementById('capBody').innerHTML = linhas.map(l=>{
+    return `<tr><td>${l.imovel}</td><td><span style="color:#4ade80;font-family:monospace;font-weight:700">${fmtR$(l.valor)}</span></td>` +
+      `<td>${Y.mesesLabel[l.mes]}</td>` +
+      `<td><span class="pill ${EXCL_CLS[l.excl]||'p-gray'}">${l.excl}</span></td>` +
+      `<td><span class="pill ${ORIG_CLS[l.orig]||'p-gray'}">${l.orig}</span></td>` +
+      `<td><span class="pill ${DEST_CLS[l.dest]||'p-gray'}">${l.dest}</span></td>` +
+      `<td><span class="pill ${CONT_CLS[l.cont]||'p-gray'}">${l.cont}</span></td></tr>`;
+  }).join('');
+
+  overlay.classList.add('open');
+}
+function closeCapModal(){ document.getElementById('capModalOverlay').classList.remove('open'); }
+
+function openVglModal(mes){
+  const Y = YEARS[currentYear];
+  const meses = mes ? [mes] : Y.meses;
+
+  let vglNovas=0, vglReloc=0, vglTotal=0, qtdNovas=0, qtdReloc=0;
+  const linhas = [];
+  meses.forEach(m=>{
+    (Y.dbLoc[m]||[]).forEach(r=>{
+      const v = parseValor(r[1]);
+      vglTotal += v;
+      if(r[6]==='Nova'){ vglNovas+=v; qtdNovas++; } else { vglReloc+=v; qtdReloc++; }
+      linhas.push({imovel:r[0], valor:v, tipo:r[6], mes:m});
+    });
+  });
+  linhas.sort((a,b)=> b.valor-a.valor);
+
+  const metaPeriodo = mes ? Y.metaMensal : Y.metaMensal * Y.meses.length;
+  const diff = vglTotal - metaPeriodo;
+  const acima = diff >= 0;
+  const pctNovas = pct(vglNovas, vglTotal), pctReloc = pct(vglReloc, vglTotal);
+
+  document.getElementById('vglTitulo').textContent = mes
+    ? `VGL Detalhado — ${Y.mesesLabel[mes]} ${Y.label}`
+    : `VGL Detalhado — Acumulado ${Y.label}`;
+
+  document.getElementById('vglKpis').innerHTML = `
+    <div class="cap-kpi"><div class="cap-kpi-lbl">VGL Total</div><div class="cap-kpi-val" style="color:#fbbf24">${fmtR$(vglTotal)}</div><div class="cap-kpi-sub">${linhas.length} locações</div></div>
+    <div class="cap-kpi"><div class="cap-kpi-lbl">VGL Novas Locações</div><div class="cap-kpi-val" style="color:#4ade80;font-size:20px">${fmtR$(vglNovas)}</div><div class="cap-kpi-sub">${pctNovas}% do VGL · ${qtdNovas} imóveis</div></div>
+    <div class="cap-kpi"><div class="cap-kpi-lbl">VGL Relocações</div><div class="cap-kpi-val" style="color:#7eb3ff;font-size:20px">${fmtR$(vglReloc)}</div><div class="cap-kpi-sub">${pctReloc}% do VGL · ${qtdReloc} imóveis</div></div>
+    <div class="cap-kpi"><div class="cap-kpi-lbl">Vs. Meta do Período</div><div class="cap-kpi-val" style="color:${acima?'#4ade80':'#f87171'};font-size:20px">${acima?'+':'-'}${fmtR$(Math.abs(diff))}</div><div class="cap-kpi-sub">meta: ${fmtR$(metaPeriodo)}</div></div>
+  `;
+
+  document.getElementById('vglBarSplit').innerHTML = `
+    <div style="font-size:11px;color:#9ca3af;margin-bottom:6px">Quanto cada tipo influenciou o VGL do período</div>
+    <div style="display:flex;height:26px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.06)">
+      <div style="width:${pctNovas}%;background:linear-gradient(90deg,#22c55e,#4ade80);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0c0e15">${pctNovas>=10?pctNovas+'%':''}</div>
+      <div style="width:${pctReloc}%;background:linear-gradient(90deg,#4f8ef7,#7eb3ff);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0c0e15">${pctReloc>=10?pctReloc+'%':''}</div>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:8px;font-size:11px">
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:#4ade80;display:inline-block"></span>Novas Locações</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:#7eb3ff;display:inline-block"></span>Relocações</div>
+    </div>
+  `;
+
+  document.getElementById('vglModalOverlay').classList.add('open');
+}
+function closeVglModal(){ document.getElementById('vglModalOverlay').classList.remove('open'); }
+
+
+/* ===================== COMPARATIVO ENTRE ANOS ===================== */
+function deltaPill(atual, anterior, opts){
+  opts = opts || {};
+  const invert = !!opts.invert;
+  let diff = atual - anterior;
+  let pctDiff = anterior !== 0 ? (diff/Math.abs(anterior))*100 : (atual>0 ? 100 : 0);
+  let cls = 'cmp-flat', seta = '→';
+  const positivo = invert ? diff < 0 : diff > 0;
+  const negativo = invert ? diff > 0 : diff < 0;
+  if(positivo){ cls='cmp-up'; seta='▲'; }
+  else if(negativo){ cls='cmp-down'; seta='▼'; }
+  const txt = `${pctDiff>=0?'+':''}${pctDiff.toFixed(0)}%`;
+  return `<span class="cmp-delta ${cls}">${seta} ${txt}</span>`;
+}
+
+function cmpRow(lbl, vAnt, vAtual, fmt, opts){
+  fmt = fmt || (v=>v);
+  return `<div class="cmp-row">
+    <div class="cmp-lbl">${lbl}</div>
+    <div class="cmp-vals">
+      <div><div class="cmp-year-lbl">${YEARS_ORDER[0]}</div><div class="cmp-val" style="color:#9ca3af">${fmt(vAnt)}</div></div>
+      <div><div class="cmp-year-lbl">${YEARS_ORDER[1]}</div><div class="cmp-val" style="color:#e5e9f0">${fmt(vAtual)}</div></div>
+      ${deltaPill(vAtual, vAnt, opts)}
+    </div>
+  </div>`;
+}
+
+let YEARS_ORDER = ['2025','2026'];
+
+function commonMonths(){
+  const anos = Object.keys(YEARS).sort((a,b)=>a-b);
+  YEARS_ORDER = anos;
+  const [a,b] = anos;
+  const mesesA = YEARS[a].meses, mesesB = YEARS[b].meses;
+  return mesesA.filter(m => mesesB.indexOf(m) >= 0);
+}
+
+function renderComparativo(){
+  const meses = commonMonths();
+  const [anoA, anoB] = YEARS_ORDER;
+  const YA = YEARS[anoA], YB = YEARS[anoB];
+  const sA = computeStats(anoA, meses);
+  const sB = computeStats(anoB, meses);
+
+  const labelPeriodo = `${YA.mesesLabel[meses[0]]} a ${YA.mesesLabel[meses[meses.length-1]]}`;
+  document.getElementById('compareBanner').innerHTML =
+    `⇄ Comparando o <b>mesmo período</b> nos dois anos (${labelPeriodo}), para uma comparação justa — ${anoB} ainda não fechou o ano completo. ` +
+    (!YA.hasLoc || !YB.hasLoc ? 'Alguns indicadores de locação podem estar incompletos.' : '');
+
+  const fmtInt = v => v.toLocaleString('pt-BR');
+  const fmtMoney = v => fmtR$(v);
+
+  function pctChange(atual, anterior){
+    return anterior !== 0 ? ((atual-anterior)/Math.abs(anterior))*100 : (atual>0 ? 100 : 0);
+  }
+  const indicadoresGeral = [
+    { lbl:'Captações', a:sA.totalCap, b:sB.totalCap },
+    { lbl:'Locações', a:sA.totalLoc, b:sB.totalLoc },
+    { lbl:'VGL', a:sA.vglTotal, b:sB.vglTotal },
+  ].map(x => ({ ...x, growth: pctChange(x.b, x.a) }));
+  const mediaGeral = indicadoresGeral.reduce((s,x)=>s+x.growth,0) / indicadoresGeral.length;
+  const geralPositivo = mediaGeral >= 0;
+
+  document.getElementById('crescimentoGeralCard').innerHTML = `
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="min-width:220px">
+        <div class="chart-lbl" style="margin-bottom:6px">Crescimento Geral da Imobiliária</div>
+        <div style="font-size:38px;font-weight:700;font-family:'DM Mono',monospace;color:${geralPositivo?'#4ade80':'#f87171'}">
+          ${geralPositivo?'▲':'▼'} ${mediaGeral>=0?'+':''}${mediaGeral.toFixed(0)}%
+        </div>
+        <div style="font-size:11.5px;color:#6b7280;margin-top:4px">${anoA} → ${anoB} · média simples de ${indicadoresGeral.length} indicadores-chave</div>
+      </div>
+      <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:0">
+        ${indicadoresGeral.map(x=>{
+          const pos = x.growth >= 0;
+          return `<div class="cmp-row" style="padding:5px 0">
+            <div class="cmp-lbl">${x.lbl}</div>
+            <div class="cmp-vals"><span class="cmp-delta ${pos?'cmp-up':'cmp-down'}" style="min-width:64px">${pos?'▲':'▼'} ${x.growth>=0?'+':''}${x.growth.toFixed(0)}%</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('compareKpiRow').innerHTML = `
+    <div class="chip"><div class="chip-lbl">Captações</div><div class="chip-val" style="color:#4f8ef7">${sB.totalCap}</div><div class="chip-sub">${deltaPill(sB.totalCap, sA.totalCap)}</div></div>
+    <div class="chip"><div class="chip-lbl">Locações</div><div class="chip-val" style="color:#22c55e">${sB.totalLoc}</div><div class="chip-sub">${deltaPill(sB.totalLoc, sA.totalLoc)}</div></div>
+    <div class="chip"><div class="chip-lbl">VGL</div><div class="chip-val" style="color:#f59e0b;font-size:17px">${fmtR$(sB.vglTotal)}</div><div class="chip-sub">${deltaPill(sB.vglTotal, sA.vglTotal)}</div></div>
+    <div class="chip"><div class="chip-lbl">Ticket Médio</div><div class="chip-val" style="color:#22c55e;font-size:19px">${fmtR$(sB.ticketMedio)}</div><div class="chip-sub">${deltaPill(sB.ticketMedio, sA.ticketMedio)}</div></div>
+    <div class="chip"><div class="chip-lbl">Novas Locações</div><div class="chip-val" style="color:#4ade80;font-size:19px">${sB.novas}</div><div class="chip-sub">${deltaPill(sB.novas, sA.novas)}</div></div>
+    <div class="chip"><div class="chip-lbl">Relocações</div><div class="chip-val" style="color:#7eb3ff;font-size:19px">${sB.reloc}</div><div class="chip-sub">${deltaPill(sB.reloc, sA.reloc)}</div></div>
+  `;
+
+  const nomesSet = new Set([...YA.captadores, ...YB.captadores]);
+  document.getElementById('compareCaptadores').innerHTML = [...nomesSet].map(nome=>{
+    const qA = sA.porCaptador[nome]||0, qB = sB.porCaptador[nome]||0;
+    const tagA = YA.captadores.indexOf(nome)<0 ? ' <span style="font-size:9px;color:#6b7280">(não atuava)</span>' : '';
+    const tagB = YB.captadores.indexOf(nome)<0 ? ' <span style="font-size:9px;color:#6b7280">(não atuava)</span>' : '';
+    return cmpRow(nome + (qA===0&&tagA?tagA:(qB===0&&tagB?tagB:'')), qA, qB, fmtInt);
+  }).join('');
+
+  document.getElementById('comparePerfilCap').innerHTML =
+    cmpRow('Exclusividade', pct(sA.excl,sA.totalCap), pct(sB.excl,sB.totalCap), v=>v+'%', {isPct:true}) +
+    cmpRow('Origem externa', pct(sA.ext,sA.totalCap), pct(sB.ext,sB.totalCap), v=>v+'%', {isPct:true}) +
+    cmpRow('Contrato C.A', pct(sA.ca,sA.totalCap), pct(sB.ca,sB.totalCap), v=>v+'%', {isPct:true}) +
+    cmpRow('Destinação residencial', pct(sA.residCap,sA.totalCap), pct(sB.residCap,sB.totalCap), v=>v+'%', {isPct:true}) +
+    cmpRow('Captações via SDR', sA.sdrCount, sB.sdrCount, fmtInt);
+
+  if(YA.hasLoc && YB.hasLoc){
+    document.getElementById('comparePerfilLoc').innerHTML =
+      cmpRow('Novas Locações', pct(sA.novas,sA.totalLoc), pct(sB.novas,sB.totalLoc), v=>v+'%', {isPct:true}) +
+      cmpRow('Relocações', pct(sA.reloc,sA.totalLoc), pct(sB.reloc,sB.totalLoc), v=>v+'%', {isPct:true}) +
+      cmpRow('Destinação residencial', pct(sA.residLoc,sA.totalLoc), pct(sB.residLoc,sB.totalLoc), v=>v+'%', {isPct:true});
+
+    const garNomes = new Set([...Object.keys(sA.garantia), ...Object.keys(sB.garantia)]);
+    document.getElementById('compareGarantia').innerHTML = [...garNomes].map(g=>{
+      const qA = sA.garantia[g]||0, qB = sB.garantia[g]||0;
+      return cmpRow(g, pct(qA,sA.totalLoc), pct(qB,sB.totalLoc), v=>v+'%', {isPct:true});
+    }).join('');
+  } else {
+    const msg = '<div class="pending-inline">Aguardando dados de locação em um dos anos</div>';
+    document.getElementById('comparePerfilLoc').innerHTML = msg;
+    document.getElementById('compareGarantia').innerHTML = msg;
+  }
+
+  const vglCard = document.getElementById('compareVglTipoCard');
+  if(YA.hasLoc && YB.hasLoc){
+    const pctNovasA = pct(sA.vglNovas, sA.vglTotal), pctRelocA = pct(sA.vglReloc, sA.vglTotal);
+    const pctNovasB = pct(sB.vglNovas, sB.vglTotal), pctRelocB = pct(sB.vglReloc, sB.vglTotal);
+    vglCard.innerHTML = `
+      <div class="chart-lbl">VGL por Tipo de Locação — quanto cada um influenciou a meta</div>
+      <div style="margin-top:10px">
+        ${cmpRow('VGL Novas Locações (R$)', sA.vglNovas, sB.vglNovas, fmtMoney)}
+        ${cmpRow('VGL Relocações (R$)', sA.vglReloc, sB.vglReloc, fmtMoney)}
+        ${cmpRow('% do VGL — Novas', pctNovasA, pctNovasB, v=>v+'%', {isPct:true})}
+        ${cmpRow('% do VGL — Relocações', pctRelocA, pctRelocB, v=>v+'%', {isPct:true})}
+      </div>
+      <div style="display:flex;gap:18px;margin-top:14px">
+        <div style="flex:1">
+          <div style="font-size:10.5px;color:#6b7280;margin-bottom:5px">${anoA}</div>
+          <div style="display:flex;height:22px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.06)">
+            <div style="width:${pctNovasA}%;background:linear-gradient(90deg,#22c55e,#4ade80)"></div>
+            <div style="width:${pctRelocA}%;background:linear-gradient(90deg,#4f8ef7,#7eb3ff)"></div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:10.5px;color:#6b7280;margin-bottom:5px">${anoB}</div>
+          <div style="display:flex;height:22px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.06)">
+            <div style="width:${pctNovasB}%;background:linear-gradient(90deg,#22c55e,#4ade80)"></div>
+            <div style="width:${pctRelocB}%;background:linear-gradient(90deg,#4f8ef7,#7eb3ff)"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:11px">
+        <div style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:#4ade80;display:inline-block"></span>Novas Locações</div>
+        <div style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:#7eb3ff;display:inline-block"></span>Relocações</div>
+      </div>
+    `;
+  } else {
+    vglCard.innerHTML = '';
+  }
+
+  const labels = meses.map(m=>YA.mesesLabel[m].slice(0,3));
+  const capA = meses.map(m=>sA.porMes[m].cap), capB = meses.map(m=>sB.porMes[m].cap);
+  const locA = meses.map(m=>sA.porMes[m].loc), locB = meses.map(m=>sB.porMes[m].loc);
+  const vglA = meses.map(m=>sA.porMes[m].vgl), vglB = meses.map(m=>sB.porMes[m].vgl);
+
+  if(chartCompareCap) chartCompareCap.destroy();
+  if(chartCompareLoc) chartCompareLoc.destroy();
+  if(chartCompareVGL) chartCompareVGL.destroy();
+
+  chartCompareCap = new Chart(document.getElementById('chartCompareCap'), {
+    type:'bar', data:{labels, datasets:[
+      {label:anoA, data:capA, backgroundColor:'#3b4f7a', borderRadius:4},
+      {label:anoB, data:capB, backgroundColor:'#4f8ef7', borderRadius:4}
+    ]},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:tc, font:{size:11}, boxWidth:10}}},
+      scales:{x:bX, y:bY}}
+  });
+  chartCompareLoc = new Chart(document.getElementById('chartCompareLoc'), {
+    type:'bar', data:{labels, datasets:[
+      {label:anoA, data:locA, backgroundColor:'#3b4f7a', borderRadius:4},
+      {label:anoB, data:locB, backgroundColor:'#22c55e', borderRadius:4}
+    ]},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:tc, font:{size:11}, boxWidth:10}}},
+      scales:{x:bX, y:bY}}
+  });
+  chartCompareVGL = new Chart(document.getElementById('chartCompareVGL'), {
+    type:'line', data:{labels, datasets:[
+      {label:anoA, data:vglA, borderColor:'#7eb3ff', backgroundColor:'rgba(126,179,255,0.08)', pointRadius:3, tension:0.3},
+      {label:anoB, data:vglB, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.08)', pointRadius:3, tension:0.3, fill:true}
+    ]},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:tc, font:{size:11}, boxWidth:10}}},
+      scales:{x:bX, y:{...bY, ticks:{...bY.ticks, callback:v=>'R$'+(v/1000).toFixed(0)+'k'}}}}
+  });
+
+  renderCarteiraComparativo(YA, YB, anoA, anoB);
+
+  document.getElementById('compareTabelaHead').innerHTML =
+    `<th>Mês</th><th style="text-align:center">Capt. ${anoA}</th><th style="text-align:center">Capt. ${anoB}</th><th style="text-align:center">Δ</th>` +
+    `<th style="text-align:center">Loc. ${anoA}</th><th style="text-align:center">Loc. ${anoB}</th><th style="text-align:center">Δ</th>` +
+    `<th style="text-align:right">VGL ${anoA}</th><th style="text-align:right">VGL ${anoB}</th><th style="text-align:right">Δ</th>`;
+
+  document.getElementById('compareTabelaBody').innerHTML = meses.map(m=>{
+    const pmA = sA.porMes[m], pmB = sB.porMes[m];
+    return `<tr><td>${YA.mesesLabel[m]}</td>
+      <td style="text-align:center;color:#9ca3af">${pmA.cap}</td><td style="text-align:center">${pmB.cap}</td><td style="text-align:center">${deltaPill(pmB.cap,pmA.cap)}</td>
+      <td style="text-align:center;color:#9ca3af">${pmA.loc}</td><td style="text-align:center">${pmB.loc}</td><td style="text-align:center">${deltaPill(pmB.loc,pmA.loc)}</td>
+      <td style="text-align:right;color:#9ca3af">${fmtR$(pmA.vgl)}</td><td style="text-align:right">${fmtR$(pmB.vgl)}</td><td style="text-align:right">${deltaPill(pmB.vgl,pmA.vgl)}</td>
+      </tr>`;
+  }).join('');
+}
+
+let chartCompareCap=null, chartCompareLoc=null, chartCompareVGL=null;
+
+function renderCarteiraComparativo(YA, YB, anoA, anoB){
+  const el = document.getElementById('carteiraCompareSection');
+  const mesesA = (YA.meses||[]).filter(m => YA.carteira && YA.carteira[m]);
+  const mesesB = (YB.meses||[]).filter(m => YB.carteira && YB.carteira[m]);
+
+  if(!mesesA.length || !mesesB.length){
+    el.innerHTML = '';
+    return;
+  }
+
+  function soma(Y, meses, campo){ return meses.reduce((s,m)=>s+Y.carteira[m][campo],0); }
+  const entradasA = soma(YA,mesesA,'entraram'), saidasA = soma(YA,mesesA,'sairam');
+  const entradasB = soma(YB,mesesB,'entraram'), saidasB = soma(YB,mesesB,'sairam');
+  const saldoA = entradasA-saidasA, saldoB = entradasB-saidasB;
+  const ativosFinalA = YA.carteira[mesesA[mesesA.length-1]].ativos;
+  const ativosFinalB = YB.carteira[mesesB[mesesB.length-1]].ativos;
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="chart-lbl">Evolução da Carteira Ativa — ${anoA} (${YA.mesesLabel[mesesA[0]]}-${YA.mesesLabel[mesesA[mesesA.length-1]]}) vs. ${anoB} (${YB.mesesLabel[mesesB[0]]}-${YB.mesesLabel[mesesB[mesesB.length-1]]})</div>
+      <div style="margin-top:10px">
+        ${cmpRow('Contratos ativos (fechamento)', ativosFinalA, ativosFinalB, v=>v.toLocaleString('pt-BR'))}
+        ${cmpRow('Entradas no período', entradasA, entradasB, v=>v.toLocaleString('pt-BR'))}
+        ${cmpRow('Saídas no período', saidasA, saidasB, v=>v.toLocaleString('pt-BR'))}
+        ${cmpRow('Saldo líquido', saldoA, saldoB, v=>(v>=0?'+':'')+v.toLocaleString('pt-BR'))}
+      </div>
+      <div style="font-size:10.5px;color:#6b7280;margin-top:10px">Períodos com meses diferentes disponíveis por ano — comparação por totais de cada intervalo, não pelo mesmo recorte de meses.</div>
+      <div style="height:210px;margin-top:14px"><canvas id="chartCompareCarteira"></canvas></div>
+    </div>
+  `;
+
+  const ORDEM = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const mesesUniao = ORDEM.filter(m => (YA.carteira&&YA.carteira[m]) || (YB.carteira&&YB.carteira[m]));
+  const labels = mesesUniao.map(m=> (YA.mesesLabel[m]||YB.mesesLabel[m]).slice(0,3));
+  const ativosA = mesesUniao.map(m=> YA.carteira&&YA.carteira[m] ? YA.carteira[m].ativos : null);
+  const ativosB = mesesUniao.map(m=> YB.carteira&&YB.carteira[m] ? YB.carteira[m].ativos : null);
+
+  if(chartCompareCarteira) chartCompareCarteira.destroy();
+  chartCompareCarteira = new Chart(document.getElementById('chartCompareCarteira'), {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:anoA+' — Contratos ativos', data:ativosA, borderColor:'#7eb3ff', backgroundColor:'rgba(126,179,255,0.08)', pointRadius:3, tension:0.3, spanGaps:false},
+      {label:anoB+' — Contratos ativos', data:ativosB, borderColor:'#4ade80', backgroundColor:'rgba(74,222,128,0.08)', pointRadius:3, tension:0.3, spanGaps:false}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:tc, font:{size:11}, boxWidth:10}}},
+      scales:{x:bX, y:bY} }
+  });
+}
+
+
+function renderCarteira(year){
+  const Y = YEARS[year];
+  const el = document.getElementById('carteiraSection');
+  const mesesCarteira = (Y.meses||[]).filter(m => Y.carteira && Y.carteira[m]);
+
+  if(!mesesCarteira.length){
+    el.innerHTML = '';
+    return;
+  }
+
+  let entradasTotal=0, saidasTotal=0;
+  mesesCarteira.forEach(m=>{ entradasTotal += Y.carteira[m].entraram; saidasTotal += Y.carteira[m].sairam; });
+  const saldoTotal = entradasTotal - saidasTotal;
+  const ativosFinal = Y.carteira[mesesCarteira[mesesCarteira.length-1]].ativos;
+  const ativosInicial = Y.carteira[mesesCarteira[0]].ativos;
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="chart-lbl">Evolução da Carteira Ativa — ${Y.label} (${Y.mesesLabel[mesesCarteira[0]]} a ${Y.mesesLabel[mesesCarteira[mesesCarteira.length-1]]})</div>
+      <div class="g6" style="margin:14px 0">
+        <div class="chip"><div class="chip-lbl">Contratos Ativos</div><div class="chip-val" style="color:#4f8ef7">${ativosFinal}</div><div class="chip-sub">em ${Y.mesesLabel[mesesCarteira[mesesCarteira.length-1]]}</div></div>
+        <div class="chip"><div class="chip-lbl">Início do Período</div><div class="chip-val" style="color:#9ca3af">${ativosInicial}</div><div class="chip-sub">em ${Y.mesesLabel[mesesCarteira[0]]}</div></div>
+        <div class="chip"><div class="chip-lbl">Entradas</div><div class="chip-val" style="color:#4ade80">${entradasTotal}</div><div class="chip-sub">novos contratos</div></div>
+        <div class="chip"><div class="chip-lbl">Saídas</div><div class="chip-val" style="color:#f87171">${saidasTotal}</div><div class="chip-sub">rescisões</div></div>
+        <div class="chip" style="border:0.5px solid rgba(${saldoTotal>=0?'34,197,94':'239,68,68'},0.3)"><div class="chip-lbl">Saldo Líquido</div><div class="chip-val" style="color:${saldoTotal>=0?'#4ade80':'#f87171'}">${saldoTotal>=0?'+':''}${saldoTotal}</div><div class="chip-sub">no período</div></div>
+        <div class="chip"><div class="chip-lbl">Crescimento</div><div class="chip-val" style="color:#fbbf24">${ativosInicial>0?(((ativosFinal-ativosInicial)/ativosInicial)*100).toFixed(0):0}%</div><div class="chip-sub">no período</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div style="height:210px"><canvas id="chartCarteiraAtivos"></canvas></div>
+        <div style="height:210px"><canvas id="chartCarteiraFluxo"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  const labels = mesesCarteira.map(m=>Y.mesesLabel[m].slice(0,3));
+  const ativosData = mesesCarteira.map(m=>Y.carteira[m].ativos);
+  const entradasData = mesesCarteira.map(m=>Y.carteira[m].entraram);
+  const saidasData = mesesCarteira.map(m=>Y.carteira[m].sairam);
+
+  if(chartCarteiraAtivos) chartCarteiraAtivos.destroy();
+  if(chartCarteiraFluxo) chartCarteiraFluxo.destroy();
+
+  chartCarteiraAtivos = new Chart(document.getElementById('chartCarteiraAtivos'), {
+    type:'line',
+    data:{ labels, datasets:[{ label:'Contratos ativos', data:ativosData, borderColor:'#4f8ef7', backgroundColor:'rgba(79,142,247,0.1)', pointRadius:3, tension:0.3, fill:true }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:tc, font:{size:11}, boxWidth:10}}, title:{display:true,text:'Contratos ativos por mês',color:tc,font:{size:11}}},
+      scales:{x:bX, y:bY} }
+  });
+
+  chartCarteiraFluxo = new Chart(document.getElementById('chartCarteiraFluxo'), {
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'Entraram', data:entradasData, backgroundColor:'#22c55e', borderRadius:4},
+      {label:'Saíram', data:saidasData, backgroundColor:'#ef4444', borderRadius:4}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:tc, font:{size:11}, boxWidth:10}}, title:{display:true,text:'Entradas vs. saídas por mês',color:tc,font:{size:11}}},
+      scales:{x:bX, y:bY} }
+  });
+}
+
+function renderAll(){
+  renderYearToggle();
+  const singleEl = document.getElementById('singleYearView');
+  const compareEl = document.getElementById('comparativoView');
+
+  if(currentMode === 'compare'){
+    singleEl.style.display = 'none';
+    compareEl.style.display = 'flex';
+    document.getElementById('periodoLabel').textContent = 'Comparativo entre anos';
+    renderComparativo();
+    return;
+  }
+
+  singleEl.style.display = 'flex';
+  compareEl.style.display = 'none';
+  const stats = computeStats(currentYear);
+  renderPendingBanner();
+  renderKPIs(stats);
+  renderDestaques(stats);
+  renderCapCards(stats);
+  renderBars(stats);
+  renderCarteira(currentYear);
+  renderTabela(stats);
+  renderCharts(stats);
+}
+
+document.addEventListener('DOMContentLoaded', async () => { await loadDashboardData(); renderAll(); });
+
+/* Reenquadra os gráficos quando esta página está dentro do iframe do Super App
+   e a aba volta a ficar visível (canvas com display:none tem 0px na hora do primeiro render) */
+window.addEventListener('message', (ev) => {
+  if (ev && ev.data === 'super-app:tab-visible') {
+    [chartCL, chartVGL, chartTicket, chartCarteiraAtivos, chartCarteiraFluxo,
+     chartCompareCap, chartCompareLoc, chartCompareVGL, chartCompareCarteira]
+      .forEach(c => { if (c) c.resize(); });
+  }
+});
+</script>
+</body>
+</html>
