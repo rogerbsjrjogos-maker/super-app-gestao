@@ -39,6 +39,12 @@
   .tab-panel.active { display: block; animation: fadeUp .28s ease both; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
 
+  /* Aba que hospeda um dashboard embutido em iframe: ocupa a altura total disponível,
+     sem a animação de fade (evita "pulo" no redimensionamento do iframe) */
+  .tab-panel.iframe-host { display: none; height: 100%; }
+  .tab-panel.iframe-host.active { display: flex; flex-direction: column; animation: none; }
+  .embedded-dashboard-frame { width: 100%; flex: 1; min-height: calc(100vh - 64px); border: 0; background: #0c0e15; }
+
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -100,7 +106,7 @@
     </div>
 
     <div class="px-6 py-5 border-t text-xs" style="border-color: var(--border); color: var(--text-muted);">
-      Estrutura inicial · v0.1
+      Estrutura inicial · v0.2
     </div>
   </aside>
 
@@ -119,7 +125,8 @@
       </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto px-8 py-8">
+    <main class="flex-1 overflow-y-auto" style="display:flex; flex-direction:column;">
+      <div class="px-8 py-8" id="content-scroll-wrap" style="flex:1; display:flex; flex-direction:column;">
 
       <!-- ===== CONSOLIDADO ===== -->
       <section class="tab-panel active" id="tab-consolidado">
@@ -180,30 +187,15 @@
         </div>
       </section>
 
-      <!-- ===== IMOBILIÁRIA ===== -->
-      <section class="tab-panel" id="tab-imobiliaria">
-        <div class="grid grid-cols-4 gap-4">
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Repasses do mês</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">R$ 198.400</p>
-          </div>
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Imóveis ativos</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">94</p>
-          </div>
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Taxa de ocupação</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">91%</p>
-          </div>
-          <div class="kpi-card rounded-lg p-5">
-            <p class="text-xs" style="color: var(--text-muted);">Inadimplência</p>
-            <p class="text-2xl font-mono-num font-semibold mt-2">3,2%</p>
-          </div>
-        </div>
-        <div class="panel rounded-lg p-6 mt-4">
-          <p class="text-sm font-semibold mb-2">Próximos repasses</p>
-          <p class="text-xs" style="color: var(--text-muted);">Espaço reservado para a tabela de repasses por imóvel e coproprietário.</p>
-        </div>
+      <!-- ===== IMOBILIÁRIA (dashboard embutido via iframe) ===== -->
+      <section class="tab-panel iframe-host" id="tab-imobiliaria">
+        <iframe
+          class="embedded-dashboard-frame"
+          id="frame-imobiliaria"
+          src="imobiliaria-dashboard.html"
+          title="Dashboard Segue Imobiliária"
+          loading="lazy">
+        </iframe>
       </section>
 
       <!-- ===== AIRBNB ===== -->
@@ -284,6 +276,7 @@
         </div>
       </section>
 
+      </div>
     </main>
   </div>
 </div>
@@ -291,7 +284,7 @@
 <script>
   const titles = {
     consolidado: ["Visão Consolidada", "Resumo das 4 empresas do grupo"],
-    imobiliaria: ["Segue Imobiliária", "Gestão de imóveis, repasses e ocupação"],
+    imobiliaria: ["Segue Imobiliária", "Dashboard anual de captações, locações e VGL"],
     airbnb:      ["Segue Airbnb", "Reservas, ocupação e desempenho das unidades"],
     kratos:      ["Kratos Serviços e Reformas", "Obras, orçamentos e faturamento"],
     viva:        ["Viva", "Painel em estruturação"],
@@ -306,6 +299,25 @@
 
     document.getElementById('page-title').textContent = titles[id][0];
     document.getElementById('page-subtitle').textContent = titles[id][1];
+
+    // A aba da Imobiliária hospeda um dashboard em iframe com Chart.js: canvases
+    // renderizados enquanto a aba estava oculta (display:none) ficam com tamanho
+    // 0x0. Ao reexibir a aba, avisamos o iframe para reajustar seus gráficos.
+    if (id === 'imobiliaria') {
+      const frame = document.getElementById('frame-imobiliaria');
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage('super-app:tab-visible', '*');
+      }
+    }
+
+    // Nas abas normais, a área de conteúdo mantém o padding padrão.
+    // Na aba com iframe, o próprio iframe ocupa toda a altura disponível.
+    const wrap = document.getElementById('content-scroll-wrap');
+    if (id === 'imobiliaria') {
+      wrap.style.padding = '0';
+    } else {
+      wrap.style.padding = '';
+    }
   }
 
   document.getElementById('page-date').textContent = new Date().toLocaleDateString('pt-BR', {
